@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="example1">
+        <h4>使用Prop传递数据</h4>
+        <son message="abcdefg"></son>
+    </div>
+    <div id="example2">
+        <h4>驼峰式(camelCased) vs 短横线隔开式(kebab-case)</h4>
+        <son message-test="cccccccccc"></son>
+    </div>
+    <div id="example3">
+        <h4>动态prop</h4>
+        <input v-model="msg" />
+        <br />
+        <son :my-msg="msg"></son>
+    </div>
+</body>
+
+</html>
+<script src='../vue2.js'></script>
+<script>
+    new Vue({
+        el: "#example1",
+        components: {
+            son: {
+                props: ['message'],
+                template: '<span>{{message}}</span>'
+
+            }
+        }
+    });
+    new Vue({
+        el: "#example2",
+        components: {
+            son: {
+                props: ['messageTest'],
+                template: '<span>{{messageTest}}</span>'
+
+            }
+        }
+    });
+    new Vue({
+        el:"#example3",
+        data:{
+            msg:"没数据"
+        },
+        components:{
+            son:{
+                props:['myMsg'],
+                 template: '<span>{{myMsg}}</span>'
+            }
+        }
+    });
+</script>

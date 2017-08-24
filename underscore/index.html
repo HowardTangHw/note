@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+
+</body>
+
+</html>
+<script src="./underscore.js"></script>
+<script>
+    _.debounce = function (func, wait, immediate) {
+        var timeout, args, context, timestamp, result;
+
+        var later = function () {
+            // 这里的now,是触发later的时候的now,和外面的timestamp不一样
+            //外面的timestamp是点击时候的_.now
+            //这里的later是触发later时间时的_.now
+            //判断两者之间的间距,从而判断是否满足wait执行事件
+            var last = _.now() - timestamp;
+
+            if (last < wait && last >= 0) {
+                timeout = setTimeout(later, wait - last);
+            } else {
+                timeout = null;
+                if (!immediate) {
+                    result = func.apply(context, args);
+                    if (!timeout) context = args = null;
+                }
+            }
+        };
+        return function () {
+            context = this;
+            args = arguments;
+
+            timestamp = _.now();
+            //后面会重新设置timeout  所以callNow 只有在immeditae为true 和第一次进来的时候触发
+            // 即(timeout还未被重新定义)
+            var callNow = immediate && !timeout;
+            if (!timeout) {
+                // 设置了 timeout，所以以后不会进入这个 if 分支了
+                // console.log('123');
+                timeout = setTimeout(later, wait);
+            }
+            // 如果是立即触发
+            if (callNow) {
+                // func 可能是有返回值的
+                result = func.apply(context, args);
+                // 解除引用
+                context = args = null;
+            }
+
+            return result;
+        };
+    };
+    function print() {
+        console.log('hello world');
+    }
+    window.onclick = _.debounce(print, 300);
+
+</script>

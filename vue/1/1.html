@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+</head>
+
+<body>
+    <!--绑定DOM-->
+    <div id="app">
+        {{message}}
+    </div>
+    <!--绑定事件-->
+    <div id="app2">
+        <span v-bind:title="message">
+        鼠标悬停几秒钟查看此处动态绑定的提示信息！
+        </span>
+    </div>
+    <!--条件判断-->
+    <div id ="app3">
+        <p v-if="seen">现在你看到我了</p>
+    </div>
+    <!--循环-->
+    <div id="app4">
+        <ol>
+            <li v-for="todo in todos">
+                {{todo.text}}
+            </li>
+        </ol>
+    </div>
+    <!--绑定事件-->
+    <div id="app5">
+        <p>{{message}}</p>
+        <button v-on:click="click">点击事件</button>
+    </div>
+    <!--表单输入和应用状态间的双向绑定-->
+    <div id="app6">
+        <p>{{message}}</p>
+        <input v-model="message">
+    </div>
+</body>
+
+</html>
+<script src="https://unpkg.com/vue/dist/vue.js"></script>
+<script>
+    var app = new Vue({
+        el: "#app",
+        data: { message: 'hello world!' }
+    });
+    var app2 = new Vue({
+        el: "#app2",
+        data: { message: '页面加载于' + new Date() }
+    });
+    var app3 =new Vue({
+        el:"#app3",
+        data:{seen:false}
+    });
+    var app4 = new Vue({
+        el:"#app4",
+        data:{
+            todos:[
+            {text:"vue1"},
+            {text:"vue2"},
+            {text:"vue3"},
+        ]}
+    });
+    var app5 = new Vue({
+        el:"#app5",
+        data:{message:"还没点击"},
+        methods:{
+            click:function(){
+                this.message="点击了";
+            }
+        }
+    });
+    var app6 = new Vue({
+        el:"#app6",
+        data:{message:"还没输入数据"}
+    })
+</script>

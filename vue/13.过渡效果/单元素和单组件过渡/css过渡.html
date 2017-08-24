@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+    <title>Document</title>
+    <style>
+        .slide-fade-enter-active {
+            transition: all .3s ease;
+        }
+
+        .slide-fade-leave-active {
+            transition: all .8s ease;
+        }
+
+        .slide-fade-enter,
+        .slide-fade-leave-active {
+            transform: translateX(10px);
+            background: #aaa;
+            color: blue;
+            opacity: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="example">
+        <button @click="show = !show">
+        toggle render
+    </button>
+        <transition name="slide-fade">
+            <p v-if="show">hello</p>
+        </transition>
+    </div>
+</body>
+
+</html>
+<script src='../vue2.js'></script>
+<script>
+    new Vue({
+        el: '#example',
+        data: {
+            show: true
+        }
+    })
+
+</script>

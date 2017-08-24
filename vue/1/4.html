@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Vue自带的过滤器</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+    <script src="../vue2.js" type="text/javascript" charset="utf-8"></script>
+</head>
+
+<body>
+    <!--过滤器-->
+    <div class="test">
+        {{message | capitalize }}
+    </div>
+    <script type="text/javascript">
+        var myVue = new Vue({
+            el: ".test",
+            data: {
+                message: "abc"
+            },
+            filters: {
+                capitalize: function (value) {
+                    if (!value) return ''
+                    value = value.toString()
+                    return value.charAt(0).toUpperCase() + value.slice(1)
+                }
+            }
+        })
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Document</title>
+  <link href="https://unpkg.com/animate.css@3.5.1/animate.min.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+  <div id="example">
+    <button @click="show = !show">
+    Toggle render
+  </button>
+    <transition name="custom-classes-transition" enter-active-class="animated rotateIn" leave-active-class="animated tada">
+      <p v-if="show">hello</p>
+    </transition>
+  </div>
+</body>
+
+</html>
+<script src='../vue2.js'></script>
+<script>
+  new Vue({
+    el: '#example',
+    data: {
+      show: true
+    }
+  })
+
+</script>

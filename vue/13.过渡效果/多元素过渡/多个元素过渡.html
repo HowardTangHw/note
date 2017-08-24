@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="example">
+        <transition>
+            <!--简写模式-->
+            <button @click="flag = !flag" :key="flag">
+                {{flag?'Save':'Edit'}}
+            </button>
+            <!--普通的v-if v-else 写法-->
+            <!--<button @click="flag = !flag" v-if="flag" key="save">Save</button>-->
+            <!--<button @click="flag = !flag" v-else key="edit">Edit</button>-->
+        </transition>
+    </div>
+    <div id="example1">
+        <transition>
+            <!--<button @click='docState="edited"' v-if="docState === 'saved'" key="saved">
+          Edit
+        </button>
+            <button @click='docState="editing"' v-if="docState === 'edited'" key="edited">
+          Save
+        </button>
+            <button @click='docState="saved"' v-if="docState === 'editing'" key="editing">
+          Cancel
+        </button>-->
+            <!--重写-->
+            <button v-bind:key="docState">
+                {{ buttonMessage }}
+            </button>
+        </transition>
+    </div>
+</body>
+
+</html>
+<script src='../vue2.js'></script>
+<script>
+    var vm1 = new Vue({
+        el: "#example",
+        data: {
+            flag: true
+        }
+    });
+    var vm2 = new Vue({
+        el: "#example1",
+        data: {
+            // 普通的
+            docState: 'saved'
+            // docState: 'edited'
+            // docState: 'editing'
+        },
+        // 重写的加上方法
+        computed: {
+            buttonMessage: function () {
+                switch (this.docState) {
+                    case 'saved': return 'Edit'
+                    case 'edited': return 'Save'
+                    case 'editing': return 'Cancel'
+                }
+            }
+        }
+    })
+</script>

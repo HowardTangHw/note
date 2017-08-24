@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+    <title>作用域插槽</title>
+</head>
+<body>
+<div id="emp1">
+    <child>
+        <!--接收从子组件中传递的prop对象(这个就是作用域插槽)-->
+        <template scope="abcde">
+            <span>hello from parent</span>
+            <!--使用这个prop对象-->
+            <span>{{ abcde.text }}</span>
+        </template>
+    </child>
+</div>
+<div id="emp2">
+    <child2 v-bind:items="items">
+        <template slot="data" scope="data">
+            <li>{{data.text}}</li>
+        </template>
+    </child2>
+</div>
+</body>
+</html>
+<script src='../vue2.js'></script>
+<script>
+Vue.component('child',{
+    // props:['abcde'],//这个写不写都可以,作用域插槽固定会接收prop对象,而且这个prop对象是肯定存在的
+    template:'\
+    <div>\
+    <!--在子组件里直接将数据传递给slot--><br/>\
+    <slot text="hello from child"></slot>\
+    </div>'
+});
+new Vue({
+    el:"#emp1"
+});
+Vue.component('child2',{
+    props:['items'],
+    template:'\
+    <ul>\
+    <slot name="data" v-for="data in items" v-bind:text="data.text"></slot>\
+    </ul>'
+});
+new Vue({
+    el:"#emp2",
+    data:{
+        items:[
+            {text:123},
+            {text:2222},
+            {text:3333},
+            {text:4444},
+            {text:555},
+        ]
+    }
+});
+</script>

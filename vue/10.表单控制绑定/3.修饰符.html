@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+    <title>Document</title>
+</head>
+
+<body>
+    <h2>修饰符</h2>
+    <div id="example1">
+        <h4>.lazy</h4>
+        <input v-model.lazy="msg" />
+        <p>{{msg}}</p>
+    </div>
+    <div id="example2">
+        <h4>.number</h4>
+        <input v-model.number="msg" type="number" />
+        <p>{{msg}}</p>
+    </div>
+    <div id="example3">
+        <h4>.trim 去掉首尾空格</h4>
+        <input v-model.trim="msg" />
+        <p>{{msg}}</p>
+    </div>
+
+</body>
+
+</html>
+<script src='../vue2.js'></script>
+<script>
+    new Vue({
+        el: "#example1",
+        data: {
+            msg: "ready",
+        },
+    });
+    new Vue({
+        el: "#example2",
+        data: {
+            msg: "ready",
+        },
+    });
+    new Vue({
+        el: "#example3",
+        data: {
+            msg: "ready",
+        },
+    });
+
+</script>

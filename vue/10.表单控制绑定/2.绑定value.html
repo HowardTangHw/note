@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="example1">
+        <h4>复选框</h4>
+        <input type="checkbox" v-model="toggle" v-bind:true-value="a" v-bind:false-value="b">
+        <p>{{toggle}}</p>
+    </div>
+    <div id="example2">
+        <input type="radio" v-model="pick" v-bind:value="a">
+        <input type="radio" v-model="pick" v-bind:value="b">
+        <p>{{pick}}</p>
+    </div>
+    <div id="example3">
+        <select v-model="selected">
+            <!-- 内联对象字面量 -->
+            <option v-bind:value="{ number: 123 }">123</option>
+        </select>
+        <p>{{selected}}</p>
+    </div>
+</body>
+
+</html>
+<script src='../vue2.js'></script>
+<script>
+    var vm = new Vue({
+        el: "#example1",
+        data: {
+            toggle: "1",
+            a: "2",
+            b: "3"
+        }
+    });
+    var vm = new Vue({
+        el: "#example2",
+        data: {
+            pick: "1",
+            a: "2",
+            b: "3"
+        }
+    });
+        var vm = new Vue({
+        el: "#example3",
+        data: {
+            selected: "1",
+            a: "2",
+            b: "3"
+        }
+    });
+
+</script>

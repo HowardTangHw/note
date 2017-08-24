@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="example">
+    <currency-input v-model="price"></currency-input>
+  </div>
+  <div id="example2">
+      <c-input label="Price" v-model="price"></c-input>
+      <c-input label="Shipping" v-model="shipping"></c-input>
+      <c-input label="Handling" v-model="handling"></c-input>
+      <c-input label="Discount" v-model="discount"></c-input>
+      <p>Total: ${{ total }}</p>
+  </div>
+</body>
+
+</html>
+<script src='../vue2.js'></script>
+<script src="https://cdn.rawgit.com/chrisvfritz/5f0a639590d6e648933416f90ba7ae4e/raw/98739fb8ac6779cb2da11aaa9ab6032e52f3be00/currency-validator.js"></script>
+<script>
+  Vue.config.devtools = true;
+  Vue.component('currency-input', {
+    template: '\
+    <span>\
+      $\
+      <input\
+        ref="input"\
+        v-bind:value="value"\
+        v-on:input="updateValue($event.target.value)"\
+      >\
+    </span>\
+  ',
+    props: ['value'],
+    methods: {
+      // 不是直接更新值，而是使用此方法来对输入值进行格式化和位数限制
+      updateValue: function (value) {
+        var formattedValue = value
+          // 删除两侧的空格符
+          .trim()
+          // 保留 2 小数位
+          .slice(0, value.indexOf('.') + 3)
+        // 如果值不统一，手动覆盖以保持一致
+        if (formattedValue !== value) {
+          this.$refs.input.value = formattedValue
+        }
+        // 通过 input 事件发出数值
+        this.$emit('input', Number(formattedValue))
+      }
+    }
+  })
+  var vm = new Vue({
+    el: '#example',
+    data: {
+      price: 0
+    }
+  })
+
+Vue.component('c-input',{
+  template:'\
+  <div>\
+    <label v-if="label">{{ label }}</label>\
+    $ \
+    <input \
+      ref="input"\
+      v-bind:value="value"\
+      v-on:input="updateValue($event.target.value)"\
+      v-on:focus="selectAll"\
+      v-on:blur="formatValue"\
+    >\
+  </div>\
+  ',
+  props:{
+    value:{
+      type:Number,
+      default:0,
+    },
+    label:{
+      type:String,
+      default:'123'
+    }
+  },
+  mounted:function(){
+    this.formatValue();
+  },
+   methods: {
+    updateValue: function (value) {
+      var result = currencyValidator.parse(value, this.value)
+      if (result.warning) {
+        this.$refs.input.value = result.value
+      }
+      this.$emit('input', result.value)
+    },
+    formatValue: function () {
+      this.$refs.input.value = currencyValidator.format(this.value)
+    },
+    selectAll: function (event) {
+      setTimeout(function () {
+      	event.target.select()
+      }, 0)
+    }
+   },
+
+});
+var vm2= new Vue({
+  el:"#example2",
+  data:{
+    price: 0,
+    shipping: 0,
+    handling: 0,
+    discount: 0
+  },
+  computed:{
+    total:function(){
+      return( (this.price*100+this.shipping*100+this.handling*100)/100*(this.discount/10)).toFixed(2);
+    }
+  }
+});
+</script>

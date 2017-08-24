@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+    <title>Document</title>
+    <style>
+        .flag-transition-enter-active,
+        .flag-transition-leave-activ {
+            transition: opacity .3s ease-in-out;
+        }
+
+        .flag-transition-enter,
+        .flag-transition-leave-activ {
+            opacity: 0
+        }
+    </style>
+</head>
+
+<body>
+    <div id="example">
+        <input v-model="flag" type="radio" value="abc" id="A1" name="flag" /><label for="A1">A</label>
+        <input v-model="flag" type="radio" value="bcd" id="B1" name="flag" /><label for="B1">B</label>
+        <transition name="flag-transition" mode="out-in">
+            <component :is="flag"></component>
+        </transition>
+    </div>
+</body>
+
+</html>
+<script src='../vue2.js'></script>
+<script>
+    new Vue({
+        el: "#example",
+        data: {
+            flag: 'abc'
+        },
+        components: {
+            'abc': {
+                template: '<div>Component A</div>'
+            },
+            'bcd': {
+                template: '<div>Component B</div>'
+            }
+        }
+    });
+
+</script>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Class与Style绑定</title>
+    <script src="../vue2.js"></script>
+</head>
+<body>
+    <div class="a" v-bind:class="classObject" id="abc"></div>
+</body>
+</html>
+<script>
+    var vm = new Vue({
+        el:"#abc",
+        data:{
+            isTrue:true,
+            isFalse:false
+            },
+        computed:{
+        classObject:function(){
+            return{
+                b:this.isTrue,c:this.isFalse
+            };
+        }
+        }
+    });
+</script>

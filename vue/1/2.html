@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <!--组件化应用构建-->
+    <div id="app1">
+        <ol>
+            <todo-item v-for="item in texts" v-bind:todo="item"></todo-item>
+        </ol>
+    </div>
+</body>
+</html>
+<script src="https://unpkg.com/vue/dist/vue.js"></script>
+<script>
+    Vue.component('todo-item',{
+        props:['todo'],
+        template:'<li>{{todo.text}}</li>'
+    })
+    var app1 = new Vue({
+        el:"#app1",
+        data:{
+            texts:[
+                {text:"vue1"},
+                {text:"vue2"},
+                {text:"vue3"},
+                {text:"vue4"},
+            ]
+        }
+    })
+
+</script>

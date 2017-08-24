@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <!-- todo list -->
+    <div id="todo-list">
+        <!--绑定数据v-model 绑定按下回车键时间v-on:keyup.enter -->
+        <input v-model="addTodoText" v-on:keyup.enter="addNewTodo" placeholder="add a new todo"/>
+        <ul>
+            <!--模板是todo-item 然后循环数据,v-bind:title 将title绑定给todo,绑定remove事件-->
+            <li is="todo-item" v-for="(todo,index) in todos" v-bind:title="todo" v-on:remove="todos.splice(index,1)"></li>
+        </ul>
+    </div>
+</body>
+
+</html>
+<script src="../vue2.js"></script>
+<script>
+Vue.component('todo-item',{
+    template:'<li>{{title}}<button v-on:click="$emit(\'remove\')">x</button></li>'
+    ,props:['title']
+})
+new Vue({
+    el:"#todo-list",
+    data:{
+        addTodoText:"",
+        todos:['1','2','3'],
+    },
+    methods:{
+        addNewTodo:function(){
+            this.todos.push(this.addTodoText);
+            this.addTodoText='';
+        }
+    }
+
+})
+</script>

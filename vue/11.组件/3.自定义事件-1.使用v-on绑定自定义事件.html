@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+    <title>Document</title>
+</head>
+
+<body>
+<div id="example">
+    <p>{{total}}</p>
+    <button-click v-on:sum="sumtotal"></button-click>
+    <button-click v-on:sum="sumtotal"></button-click>
+</div>
+</body>
+
+</html>
+<script src='../vue2.js'></script>
+<script>
+Vue.component('button-click',{
+    template:'<button v-on:click="sum">{{ counter }}</button>',
+    data:function(){
+        return{
+            counter:0
+        }
+    },
+    methods:{
+        sum:function(){
+            this.counter++;
+            this.$emit('sum');
+        }
+    }
+})
+new Vue({
+    el:"#example",
+    data:{
+        total:0,
+    },
+    methods:{
+        sumtotal:function(){
+            this.total++;
+        }
+    }
+});
+</script>

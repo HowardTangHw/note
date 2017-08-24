@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <div id="example">
+        <p>正常{{message}}</p>
+        <p>倒叙{{reversedmessage}}</p>
+        <p>倒叙{{reversedmessage}}</p>
+        <p>倒叙{{reversedmessage}}</p>
+        <p>倒叙{{reversedmessage}}</p>
+        <p>倒叙{{reversedmessage}}</p>
+        <button v-bind:disabled="someDynamicCondition">Button</button>
+        <p>{{ message | capitalize }}</p>
+    </div>
+</body>
+</html>
+<script src="../vue2.js"></script>
+<script>
+    var vm = new Vue({
+        el:"#example",
+        data:{
+            message:"hello",
+            someDynamicCondition:true,
+            },
+        computed:{
+            reversedmessage:function(){
+                return this.message.split('').reverse().join('');
+            }
+        }
+    });
+
+</script>

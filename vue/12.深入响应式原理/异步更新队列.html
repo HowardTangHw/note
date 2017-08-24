@@ -1,0 +1,41 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <script src="https://unpkg.com/vue@2.3.3/dist/vue.js"></script>
+    <div id="example">
+        <example></example>
+    </div>
+</body>
+
+</html>
+<script>
+    Vue.component('example', {
+        template: '<span @click="updateMessage">{{message}}</span>',
+        props: ['msg'],
+        data: function () {
+            return { message: 'not updated' }
+        },
+        methods: {
+            updateMessage: function () {
+                this.message = 'updated';
+                console.log(this.$el.textContent)//not Updated
+                this.$el.nextTick(function () {
+                    console.log(this.$el.textContent)//updated
+                })
+            }
+        }
+    });
+    var vm = new Vue({
+        el: '#example'
+    })
+
+</script>

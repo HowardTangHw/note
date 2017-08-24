@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+    <title>Document</title>
+</head>
+
+<body>
+    <h4>文本</h4>
+    <div class="example">
+        <input v-model="message" placeholder="请输入信息" />
+        <p>信息是:{{message}}</p>
+    </div>
+    <h4>多行文本</h4>
+    <div class="example1">
+        <p style="white-space: pre">{{message}}</p>
+        <textarea v-model="message"></textarea>
+    </div>
+    <h4>复选框</h4>
+    <h4>单个勾选框</h4>
+    <div class="example2">
+        <input type="checkbox" id="checkbox" v-model="message" />
+        <label for="checkbox">{{message}}</label>
+    </div>
+    <h4>多个勾选框</h4>
+    <div class="example3">
+        <input type="checkbox" id="john" value="john" v-model="message" />
+        <label for="john">john</label>
+        <input type="checkbox" id="jack" value="jack" v-model="message" />
+        <label for="jack">jack</label>
+        <input type="checkbox" id="mike" value="mike" v-model="message" />
+        <label for="mike">mike</label>
+        <br />
+        <span>your choice :{{message}}</span>
+        <br>
+    </div>
+    <h4>单选按钮</h4>
+    <div id="example-4" class="demo">
+        <input type="radio" id="one" value="One" v-model="picked">
+        <label for="one">One</label>
+        <br>
+        <input type="radio" id="two" value="Two" v-model="picked">
+        <label for="two">Two</label>
+        <br>
+        <span>Picked: {{ picked }}</span>
+    </div>
+    <h4>选择列表</h4>
+    <h4>单选列表</h4>
+    <div id="example-5" class="demo">
+        <select v-model="selected">
+            <option>A</option>
+            <option>B</option>
+            <option>C</option>
+        </select>
+        <span>Selected: {{ selected }}</span>
+    </div>
+    <h4>多选列表（绑定到一个数组）：</h4>
+    <div id="example-6" class="demo">
+        <select v-model="selected" multiple style="width: 50px">
+            <option>A</option>
+            <option>B</option>
+            <option>C</option>
+        </select>
+        <br>
+        <span>Selected: {{ selected }}</span>
+    </div>
+    <h4>利用v-for渲染动态选项</h4>
+    <div id="example-7">
+        <select v-model="message">
+            <option v-for="option in options" v-bind:value="option.value">
+                {{option.message}}
+            </option>
+        </select>
+        <p>{{message}}</p>
+    </div>
+</body>
+
+</html>
+<script src='../vue2.js'></script>
+<script>
+    new Vue({
+        el: ".example",
+        data: {
+            message: 0,
+        }
+    });
+    new Vue({
+        el: ".example1",
+        data: {
+            message: 0,
+        }
+    });
+    new Vue({
+        el: ".example2",
+        data: {
+            message: false,
+        }
+    });
+    new Vue({
+        el: ".example3",
+        data: {
+            message: [],
+        }
+    });
+    new Vue({
+        el: '#example-4',
+        data: {
+            picked: ''
+        }
+    });
+    new Vue({
+        el: '#example-5',
+        data: {
+            selected: null
+        }
+    })
+new Vue({
+  el: '#example-6',
+  data: {
+    selected: []
+  }
+})
+new Vue({
+    el:"#example-7",
+    data:{
+        message:"one",
+        // select的v-model绑定值和option的value互相绑定
+        options:[
+            {message:"1",value:"one"},
+            {message:"2",value:"two"},
+            {message:"3",value:"three"},
+            {message:"4",value:"four"},
+        ]
+    }
+})
+</script>

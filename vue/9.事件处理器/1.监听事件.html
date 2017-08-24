@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="example3">
+        <p>这个按钮被点击{{counter}}次.</p>
+        <button v-on:mousedown="counter+=1" v-on:mouseup="">增加1</button>
+    </div>
+</body>
+
+</html>
+<script src="../vue2.js"></script>
+<script>
+    new Vue({
+        el: "#example3",
+        data: {
+            counter: 0
+        }
+    });
+</script>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <!--循环-->
+    <div id="example">
+        <div v-for="item in items">
+            {{item.number}}
+        </div>
+    </div>
+    <!--访问父级的属性，还有第二个参数为索引值-->
+    <div id="example-2">
+        <div v-for="(item,idx) in message">
+            {{abcde}}-{{idx+1}}-{{item.number}}
+        </div>
+    </div>
+    <!--template模板加v-for-->
+    <ul id="example-3">
+        <template v-for="item in message">
+            <li>{{ item.number }}</li>
+            <li class="divider"></li>
+        </template>
+    </ul>
+    <!--对象迭代v-for-->
+    <ul id="repeat-object" class="demo">
+        <li v-for="(value,key,idx) in object">
+            {{idx+1}}-{{key}}-{{value}}
+        </li>
+    </ul>
+    <!--整数迭代-->
+    <div id ="example-4">
+        <span v-for="n in 10">{{ n }}</span>
+    </div>
+</body>
+
+</html>
+
+
+
+
+<script src="../vue2.js"></script>
+<script>
+    var vm = new Vue({
+        el: "#example",
+        data: {
+            items: [
+                { number: "6666" },
+                { number: "6666" },
+                { number: "6666" },
+                { number: "6666" },
+                { number: "6666" },
+                { number: "6666" },
+                { number: "6666" },
+            ]
+        }
+    });
+    var vm = new Vue({
+        el: "#example-2",
+        data: {
+            time: "1",
+            message: [
+                { number: "6666" },
+                { number: "6666" },
+                { number: "6666" },
+                { number: "6666" },
+                { number: "6666" },
+                { number: "6666" },
+                { number: "6666" },
+            ]
+        },
+        computed: {
+            abcde: function () {
+                var myDate = new Date();
+                var b = myDate.getFullYear() + "-";
+                b += myDate.getMonth() + 1;
+                b += "-" + myDate.getDate();
+                this.time = b;
+                return b;
+            }
+        }
+    });
+    var vm = new Vue({
+        el: "#example-3",
+        data: {
+            message: [
+                { number: "6666" },
+                { number: "6666" },
+                { number: "6666" },
+                { number: "6666" },
+                { number: "6666" },
+                { number: "6666" },
+                { number: "6666" },
+            ]
+        }
+    });
+    new Vue({
+        el: '#repeat-object',
+        data: {
+            object: {
+                FirstName: 'this is 1',
+                LastName: 'this is 2',
+                Age: 30
+            }
+        }
+    });
+    //     
+    new Vue({
+        el: '#example-4',
+    });
+
+</script>

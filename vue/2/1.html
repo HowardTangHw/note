@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>watch</title>
+    <script src="../vue2.js"></script>
+    <script src="https://unpkg.com/axios@0.12.0/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/lodash@4.13.1/lodash.min.js"></script>
+</head>
+<body>
+    <div id="abc">
+    <input id="question" />
+    <p>{{answer}}</p>
+    </div>
+</body>
+</html>
+<script>
+    var vm = new Vue({
+        el:"#abc",
+        data:{
+            question:"",
+            answer:"请输入数据"
+        },
+        watch:{
+            // 如果 question 发生改变，这个函数就会运行
+            // 键值对，第一个为监控对象v-model
+            question:function(newQuestion){
+                this.answer="正在输入中";
+                this.question1();
+            }
+        },
+        methods:{
+            question1:_.debounce(
+      function () {
+        var vm = this;
+        vm.answer = "你输入的问题是"+this.question;
+      },
+      // 这是我们为用户停止输入等待的毫秒数
+      500
+    ) }
+    });
+</script>

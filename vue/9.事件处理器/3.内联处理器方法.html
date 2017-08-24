@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+    <title>Document</title>
+</head>
+
+<body>
+    <div class="example1">
+        <button @click="say('hi')">hi</button>
+        <button @click="say('hello')">hello</button>
+    </div>
+    <div class="example2">
+        <a href="http://www.baidu.com" @click="say('hi',$event)">click</a>
+    </div>
+
+</body>
+
+</html>
+<script src='../vue2.js'></script>
+<script>
+    var vm = new Vue({
+        el: ".example1",
+        methods: {
+            say: function (message) {
+                alert(message);
+            }
+        }
+    });
+    new Vue({
+        el: ".example2",
+        methods: {
+            say: function (message, event) {
+                if (event) 
+                {event.preventDefault()
+                alert(message)
+                }
+            }
+        }
+    });
+</script>
