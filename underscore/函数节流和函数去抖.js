@@ -27,32 +27,6 @@ function print() {
 
 window.onscroll = debounce(print, 300);
 
-// 函数节流(throttle) 让一个函数不要执行得太频繁，减少一些过快的调用来节流。
-/**
- * 如果将水龙头拧紧直到水是以水滴的形式流出，那你会发现每隔一段时间，就会有一滴水流出。
- * 也就是会说预先设定一个执行周期，当调用动作的时刻大于等于执行周期则执行该动作，然后进入下一个新周期。
- */
-
-/**
-* 频率控制 返回函数连续调用时，action 执行频率限定为 次 / delay
-* @param delay  {number}    延迟时间，单位毫秒
-* @param fn {function}  请求关联函数，实际应用需要调用的函数
-* @return {function}    返回客户调用函数
-*/
-var throttle = function(fn, delay) {
-  var last = 0;
-  return function() {
-    var _this = this,
-      args = arguments,
-      cur = +new Date();
-
-    if (cur - last > delay) {
-      fn.apply(_this, args);
-      last = cur;
-    }
-  };
-};
-
 // 函数去抖 函数去抖就是对于一定时间段的连续的函数调用，只让其执行一次。(第一次)
 // sample 1: _.debounce(function(){}, 1000)
 // 连续事件结束后的 1000ms 后触发
@@ -112,6 +86,32 @@ _.debounce = function(func, wait, immediate) {
   };
 };
 
+// 函数节流(throttle) 让一个函数不要执行得太频繁，减少一些过快的调用来节流。
+/**
+ * 如果将水龙头拧紧直到水是以水滴的形式流出，那你会发现每隔一段时间，就会有一滴水流出。
+ * 也就是会说预先设定一个执行周期，当调用动作的时刻大于等于执行周期则执行该动作，然后进入下一个新周期。
+ */
+
+/**
+* 频率控制 返回函数连续调用时，action 执行频率限定为 次 / delay
+* @param delay  {number}    延迟时间，单位毫秒
+* @param fn {function}  请求关联函数，实际应用需要调用的函数
+* @return {function}    返回客户调用函数
+*/
+var throttle = function(fn, delay) {
+  var last = 0;
+  return function() {
+    var _this = this,
+      args = arguments,
+      cur = +new Date();
+
+    if (cur - last > delay) {
+      fn.apply(_this, args);
+      last = cur;
+    }
+  };
+};
+
 //underscore _.throttle 函数
 // 函数节流（如果有连续事件响应，则每间隔一定时间段触发）
 // 每间隔 wait(Number) milliseconds 触发一次 func 方法
@@ -121,6 +121,7 @@ _.debounce = function(func, wait, immediate) {
 // 那么最后一次回调不会被触发
 // **Notice: options 不能同时设置 leading 和 trailing 为 false**
 // https://github.com/hanzichi/underscore-analysis/blob/master/underscore-1.8.3.js/underscore-1.8.3-analysis.js#L1560
+
 var throttle = function(func, wait, options) {
   var context, args, result;
   var timeout = null;
