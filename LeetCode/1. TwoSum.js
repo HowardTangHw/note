@@ -31,6 +31,9 @@ var twoSum = function(nums, target) {
   }
 };
 
+
+
+/*用key存放值,用value存放这个值的索引值*/
 var twoSum = function(nums, target) {
   var a = [];
   for (var i = 0, len = nums.length; i < len; i++) {
