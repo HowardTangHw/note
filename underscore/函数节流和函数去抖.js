@@ -28,6 +28,7 @@ function print() {
 window.onscroll = debounce(print, 300);
 
 // 函数去抖 函数去抖就是对于一定时间段的连续的函数调用，只让其执行一次。(第一次)
+// 多次触发后,在最后一次触发的基础上+wating,然后调用事件;
 // sample 1: _.debounce(function(){}, 1000)
 // 连续事件结束后的 1000ms 后触发
 // sample 1: _.debounce(function(){}, 1000, true)
@@ -47,9 +48,9 @@ _.debounce = function(func, wait, immediate) {
   var timeout, args, context, timestamp, result;
 
   var later = function() {
-    // 外面的timestamp是点击时候的_.now
-    // 这里的last是触发later时间时的_.now
-    // 判断两者之间的间距(就是点击事件和触发事件两者的时间差),从而判断是否满足wait执行事件
+    // 外面的timestamp是点击时候的_.now(没加wait)
+    // 这里的last是触发later时间时的_.now(加了wait)
+    // 判断last - timestamp 等不等于wait,如果等了,就触发事件.不相等,则利用差值作为时间,重新开一个计时器,再调一次.
     // 多次点击时,会刷新timestamp,也会令last重新计算,从新获取now-timestamp;
     var last = _.now() - timestamp;
     if (last < wait && last >= 0) {
@@ -144,8 +145,9 @@ var throttle = function(func, wait, options) {
     var remaining = wait - (now - previous);
     context = this;
     args = arguments;
-
+    // 时间到了,或者时间已经超过了,就立即执行
     if (remaining <= 0 || remaining > wait) {
+      // 如果有计时器,则将他清空
       if (timeout) {
         clearTimeout(timeout);
         timeout = null;
@@ -156,6 +158,7 @@ var throttle = function(func, wait, options) {
       result = func.apply(context, args);
 
       if (!timeout) context = args = null;
+      // 没有计时器(就是上一次事件已经触发了,因为later里会将计时器清空,且还没生成新的),才会进入这个语句
     } else if (!timeout && options.trailing !== false) {
       timeout = setTimeout(later, remaining);
     }
