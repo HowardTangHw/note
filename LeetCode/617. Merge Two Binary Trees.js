@@ -24,3 +24,9 @@ var mergeTrees = function(t1, t2) {
   }
   return t1 || t2;
 };
+/**
+ * 一开始做的时候犯了个错误,认为如果没值的话,赋予0(就是简单的相加)
+ * 然后用t1不断相加,然后返回t1就行了,可是出错了,不断的undefined
+ * 因为 树的结构是有val和left和right,必须是3者都存在的,而我当时只是简单的val相加,没有顾及到left 和right
+ * 所以要返回一个treeNode
+ */  
