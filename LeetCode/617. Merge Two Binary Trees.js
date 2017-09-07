@@ -1,6 +1,7 @@
 /**
  * link:https://leetcode.com/problems/merge-two-binary-trees/description/
- */ 
+ */
+
 /**
  * Definition for a binary tree node.
  * function TreeNode(val) {
@@ -14,13 +15,12 @@
  * @return {TreeNode}
  */
 var mergeTrees = function(t1, t2) {
- if(t1.val||t2.val)add(t1,t2);
-  function add(n1,n2){
-    n1.val=n1?n1.val:0;
-    n2.val=n2?n2:0;
-    n1.val=n2.val+n1.val;
-    if((n1.left)||(n2.left)) add(n1.left,n2.left)
-    if((n1.right)||(n2.right)) add(n1.right,n2.right)
+  if (t1 && t2) {
+    const treeNode = new TreeNode(t1.val + t2.val);
+    // 返回的只可能是一边的treeNode 或者两者相加的treeNode 
+    treeNode.left = mergeTrees(t1.left, t2.left);
+    treeNode.right = mergeTrees(t1.right, t2.right);
+    return treeNode;
   }
-  return t1;
+  return t1 || t2;
 };
