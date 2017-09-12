@@ -3,7 +3,7 @@
 ### 计划
 
 - [ ] ECMAScript6 入门  
-- [ ] LeetCode  30题  
+- [ ] LeetCode Easy 30题 
 - [ ] Underscore.js 源码解读 & 系列文章  
 - [x] 学习了解配置gulp
 - [x] 了解webpack
