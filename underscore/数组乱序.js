@@ -26,8 +26,9 @@ function shuffle(a) {
 //然后shuffled[rand]的位置改为原数组当前索引值的值(这样就不会存在重复了,因为index不断++ a[index]的值只会出现一次)
 //如果rand和index相同(因为没赋值,shuffled[index]此时为undefined 所以把a[index]放进去就可以了)
 /**
- * 其实就是判断shuffled[rand]有没有值(就是index===rand)! 如果有值就搬去shuffled[rand]=shuffled[index]中,因为shuffled[index]是undefined的
- * 然后将a[index]的值放到shuffled[rand]处
+ * shuffled[index] 开始时肯定是没值的
+ * 随机一个点(rand),判断这个点(rand)是否和当前索引(index)一致,一致时,就在这个位置push(a[index]);
+ * 如果不一致,那么(rand)肯定比(index)小,所以shuffled[rand]肯定是存在值的,这时,将值搬到当前的shuffled[index]处,然后将a[index]放入shuffled[rand]中
  */ 
 
 function shuffle(a) {
@@ -38,6 +39,7 @@ function shuffle(a) {
     if (rand !== index) {
         console.log('交换前',shuffled);
         console.log(index,rand,shuffled[rand])
+        //这时候shuffle(index)是还没有值的
         shuffled[index] = shuffled[rand];
         console.log('交换后',shuffled);
     }
