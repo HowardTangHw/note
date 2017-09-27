@@ -2,12 +2,15 @@
 
 ### 计划
 
-- [ ] ECMAScript6 入门  
+- [ ] [ECMAScript6 入门](http://es6.ruanyifeng.com/)  
 - [ ] LeetCode Easy 30题 
-- [ ] Underscore.js 源码解读 & 系列文章  
+- [x] [Underscore.js 源码解读 & 系列文章](https://github.com/hanzichi/underscore-analysis)  
 - [x] 学习了解配置gulp
-- [x] 了解webpack
+- [x] [了解webpack](https://doc.webpack-china.org/)
 - [ ] vue Api
 - [ ] 利用vue + vuex + webpack完成一个小项目
-- [ ] react Api && 30-days-of-react
+- [ ] ~~react Api && 30-days-of-react~~
 - [ ] 学习NODE.JS基础--NVM,NPM....
+- [ ] [函数式编程](https://segmentfault.com/t/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/blogs)
+
+
