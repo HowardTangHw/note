@@ -111,7 +111,9 @@ var vm = new Vue({
 })
 ```
 **************************************************
-## 过渡效果
+## 过渡&动画
+
+###　进入／离开＆列表过渡
 
 #### 概述
 
@@ -622,11 +624,11 @@ new Vue({
 
 - 在这个效果中,移除数字后,其他的数字会瞬移到新布局的位置,而不是平滑的过渡 所以我们就需要#列表的位移过渡
 
-> 列表的位移过渡
+> 列表的排序过渡
 
 - `<transition-group>`组件还有一个特殊的地方.不仅可以进入和离开动画,还可以改变定位.这个功能需要用到`v-move`**特性**,它会在元素的改变定位的过程中应用,和之前的类名一样,可以通过`name`属性来自定义前缀,也可以通过`move-class`属性手动设置.
+- `v-move`对于设置过渡的切换时机和过渡曲线非常有用
 
--`v-move`对于设置过渡的切换时机和过渡曲线非常有用
 ```html
 <div id="example">
     <button @click="abcd">Shuffle</button>
@@ -659,6 +661,570 @@ new Vue({
 ```
 
 - 在vue内部使用了一个叫[FLIP](https://aerotwist.com/blog/flip-your-animations/)简单的动画队列,使用`transition:transform 1s` 将元素从之前的位置平滑过渡到新的位置.
+- 我们将之前实现的例子和这个技术结合，使我们列表的一切变动都会有动画过渡。
 
-- 结合之前实现的例子和这个技术结合,就能修复`其他的数字会瞬移到新布局的位置`的bug了
+
+```html
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.14.1/lodash.min.js"></script>
+<div id="list-complete-demo" class="demo">
+  <button v-on:click="shuffle">Shuffle</button>
+  <button v-on:click="add">Add</button>
+  <button v-on:click="remove">Remove</button>
+  <transition-group name="list-complete" tag="p">
+    <span
+      v-for="item in items"
+      v-bind:key="item"
+      class="list-complete-item"
+    >
+      {{ item }}
+    </span>
+  </transition-group>
+</div>
+<script>
+  new Vue({
+  el: '#list-complete-demo',
+  data: {
+    items: [1,2,3,4,5,6,7,8,9],
+    nextNum: 10
+  },
+  methods: {
+    randomIndex: function () {
+      return Math.floor(Math.random() * this.items.length)
+    },
+    add: function () {
+      this.items.splice(this.randomIndex(), 0, this.nextNum++)
+    },
+    remove: function () {
+      this.items.splice(this.randomIndex(), 1)
+    },
+    shuffle: function () {
+      this.items = _.shuffle(this.items)
+    }
+  }
+})
+</script>
+<style>
+  .list-complete-item {
+  transition: all 1s;
+  display: inline-block;
+  margin-right: 10px;
+}
+.list-complete-enter, .list-complete-leave-to
+/* .list-complete-leave-active for below version 2.1.8 */ {
+  opacity: 0;
+  transform: translateY(30px);
+}
+.list-complete-leave-active {
+  position: absolute;
+}
+</style>
+```
+
+:warning:需要注意的是使用 FLIP 过渡的元素不能设置为 `display: inline` 。作为替代方案，可以设置为 `display: inline-block` 或者放置于 flex 中
+
+
+
+> 列表的交错过渡
+
+```html
+<div id="staggered-list-demo">
+  <input v-model="query">
+  <transition-group name="staggered-fade" tag="ul" v-bind:css="false" v-on:before-enter="beforeEnter" v-on:enter="enter" v-on:leave="leave">
+    <li v-for="(item,index) in items" :key="item.msg" v-bind:data-index="index">
+      {{item.msg}}
+    </li>
+  </transition-group>
+</div>
+<script>
+  new Vue({
+    el: "#staggered-list-demo",
+    data: {
+      query: '',
+      list: [
+        { msg: 'Bruce Lee' },
+        { msg: 'Jackie Chan' },
+        { msg: 'Chuck Norris' },
+        { msg: 'Jet Li' },
+        { msg: 'Kung Fury' }
+      ]
+    },
+    computed: {
+      items: function () {
+        var vm = this;
+        return this.list.filter(function (item) {
+          return item.msg.toLowerCase().indexOf(vm.query.toLowerCase()) !== -1
+        })
+      }
+    },
+    methods: {
+      beforeEnter: function (el) {
+        el.style.opacity = 0;
+        el.style.height = 0;
+      },
+      enter: function (el, done) {
+        var delay = el.dataset.index * 150;
+        setTimeout(function () {
+          Velocity(el, { opacity: 1, height: '1.6em' }, { complete: done })
+        }, delay);
+      },
+      leave: function (el, done) {
+        var delay = el.dataset.index * 150
+        setTimeout(function () {
+          Velocity(
+            el,
+            { opacity: 0, height: 0 },
+            { complete: done }
+          )
+        }, delay)
+      }
+    }
+  })
+</script>
+```
+
+
+
+#### 可复用的过渡
+
+过渡可以通过 Vue 的组件系统实现复用。要创建一个可复用过渡组件，你需要做的就是将 `<transition>` 或者 `<transition-group>` 作为根组件，然后将任何子组件放置在其中就可以了。
+
+使用template的简单例子:
+
+```javascript
+Vue.component('my-special-transition', {
+  template: '\
+    <transition\
+      name="very-special-transition"\
+      mode="out-in"\
+      v-on:before-enter="beforeEnter"\
+      v-on:after-enter="afterEnter"\
+    >\
+      <slot></slot>\
+    </transition>\
+  ',
+  methods: {
+    beforeEnter: function (el) {
+      // ...
+    },
+    afterEnter: function (el) {
+      // ...
+    }
+  }
+})
+```
+
+函数组件更适合完成这个任务：
+
+```javascript
+// 函数组件
+Vue.component('example', {
+  functional: true,
+  render: function (creatElement, context) {
+    var data = {
+      props: {
+        name: 'very-special-transition',
+        mode: 'out-in'
+      },
+      on: {
+        beforeEnter: function (el) {
+          // ...
+        },
+        afterEnter: function (el) {
+          // ...
+        }
+      }
+    }
+    return creatElement('transition',data,context,children)
+  }
+}) 
+```
+
+
+
+#### 动态过度
+
+过渡也是数据驱动的！动态过渡最基本的例子是通过 `name` 特性来绑定动态值。
+
+```html
+<transition v-bind:name="transitionName">
+  <!-- ... -->
+</transition>
+```
+
+用 Vue 的过渡系统来定义的 CSS 过渡/动画 在不同过渡间切换会非常有用。
+
+所有的过渡特性都是动态绑定。它不仅是简单的特性，通过事件的钩子函数方法，可以在获取到相应上下文数据。这意味着，可以根据组件的状态通过 JavaScript 过渡设置不同的过渡效果。
+
+```html
+<div id="dynamic-fade-demo" class="demo">
+  Fade In:
+  <input type="range" v-model="fadeInDuration" min="1" v-bind:max="maxFadeDuration" /> 
+  Fade Out:
+  <input type="range" v-model="fadeOutDuration" min="1" v-bind:max="maxFadeDuration" />
+  <transition v-bind:css="false" v-on:before-enter="beforeEnter" v-on:enter="enter" v-on:leave="leave">
+    <p v-if="show">hello</p>
+  </transition>
+  <button v-if="stop" v-on:click="stop = false ; show = false">
+    Star
+  </button>
+  <button v-else v-on:click="stop = true">
+    Stop
+  </button>
+</div>
+<script>
+  new Vue({
+    el: '#dynamic-fade-demo',
+    data: {
+      show: true,
+      fadeInDuration: 1000,
+      fadeOutDuration: 1000,
+      maxFadeDuration: 1500,
+      stop: true
+    },
+    mounted: function () {
+      this.show = false
+    },
+    methods: {
+      beforeEnter: function(el){
+        el.style.opacity = 0
+      },
+      enter: function(el,done) {
+        var vm = this;
+        Velocity(el,
+          { opacity: 1 },
+          {
+            duration: this.fadeInDuration,
+            complete:function(){
+              done()
+              if (!vm.stop) vm.show = false
+            }
+          })
+      },
+      leave: function(el,done) {
+        var vm = this
+        Velocity(el,
+          { opacity: 0 },
+          {
+            duration: this.fadeOutDuration,
+            complete:function(){
+              done()
+              vm.show = true
+            }
+          }
+        )
+      }
+    }
+  })
+</script>
+```
+
+### 状态过渡
+
+Vue 的过渡系统提供了非常多简单的方法设置进入、离开和列表的动效。那么对于数据元素本身的动效呢，比如：
+
+- 数字和运算
+- 颜色的显示
+- SVG 节点的位置
+- 元素的大小和其他的属性
+
+所有的原始数字都被事先存储起来，可以直接转换到数字。做到这一步，我们就可以结合 Vue 的响应式和组件系统，使用第三方库来实现切换元素的过渡状态。
+
+#### 状态动画与观察者
+
+通过观察者我们能监听到任何数值属性的数值更新。
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/tween.js@16.3.4"></script>
+<div id="animated-number-demo">
+  <input v-model.number="number" type="number" step="20">
+  <p>{{ animatedNumber }}</p>
+</div>
+<script>
+new Vue({
+  el: '#animated-number-demo',
+  data: {
+    number: 0,
+    animatedNumber: 0
+  },
+  watch: {
+    number: function(newValue, oldValue) {
+      var vm = this
+      function animate () {
+        if (TWEEN.update()) {
+          requestAnimationFrame(animate)
+        }
+      }
+      new TWEEN.Tween({ tweeningNumber: oldValue })
+        .easing(TWEEN.Easing.Quadratic.Out)
+        .to({ tweeningNumber: newValue }, 500)
+        .onUpdate(function () {
+          vm.animatedNumber = this.tweeningNumber.toFixed(0)
+        })
+        .start()
+      animate()
+    }
+  }
+})
+</script>
+```
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/tween.js@16.3.4"></script>
+<script src="https://cdn.jsdelivr.net/npm/color-js@1.0.3"></script>
+<div id="example-7">
+  <input
+    v-model="colorQuery"
+    v-on:keyup.enter="updateColor"
+    placeholder="Enter a color"
+  >
+  <button v-on:click="updateColor">Update</button>
+  <p>Preview:</p>
+  <span
+    v-bind:style="{ backgroundColor: tweenedCSSColor }"
+    class="example-7-color-preview"
+  ></span>
+  <p>{{ tweenedCSSColor }}</p>
+</div>
+<script>
+  var Color = net.brehaut.Color
+new Vue({
+  el: '#example-7',
+  data: {
+    colorQuery: '',
+    color: {
+      red: 0,
+      green: 0,
+      blue: 0,
+      alpha: 1
+    },
+    tweenedColor: {}
+  },
+  created: function () {
+    this.tweenedColor = Object.assign({}, this.color)
+  },
+  watch: {
+    color: function () {
+      function animate () {
+        if (TWEEN.update()) {
+          requestAnimationFrame(animate)
+        }
+      }
+      new TWEEN.Tween(this.tweenedColor)
+        .to(this.color, 750)
+        .start()
+      animate()
+    }
+  },
+  computed: {
+    tweenedCSSColor: function () {
+      return new Color({
+        red: this.tweenedColor.red,
+        green: this.tweenedColor.green,
+        blue: this.tweenedColor.blue,
+        alpha: this.tweenedColor.alpha
+      }).toCSS()
+    }
+  },
+  methods: {
+    updateColor: function () {
+      this.color = new Color(this.colorQuery).toRGB()
+      this.colorQuery = ''
+    }
+  }
+})
+</script>
+<style>
+  .example-7-color-preview {
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+}
+</style>
+```
+
+
+
+#### 动态状态过渡
+
+```html
+<style>
+  svg { display: block; }
+    polygon { fill: #41B883; }
+    circle {
+      fill: transparent;
+      stroke: #35495E;
+    }
+    input[type="range"] {
+      display: block;
+      width: 100%;
+      margin-bottom: 15px;
+    }
+</style>
+<div id="app">
+  <svg width="200" height="200">
+    <polygon :points="points"></polygon>
+    <circle cx="100" cy="100" r="90"></circle>
+  </svg>
+  <label>Sides:{{sides}}</label>
+  <input type="range" min="3" max="500" v-model.number="sides">
+  <label>Minimum Radius {{minRadius}}%</label>
+  <input type="range" min="0" max="90" v-model.number="minRadius">
+  <label>Update Interval: {{ updateInterval }} milliseconds</label>
+  <input type="range" min="10" max="2000" v-model.number="updateInterval">
+</div>
+<script>
+  new Vue({
+    el: "#app",
+    data: function () {
+      var defaultSides = 10
+      var stats = Array.apply(null, { length: defaultSides })
+        .map(function () { return 100 })
+      return {
+        stats: stats,
+        points: generatePoints(stats),
+        sides: defaultSides,
+        minRadius: 50,
+        interval: null,
+        updateInterval: 500
+      }
+    },
+    watch: {
+      sides: function (newSides, oldSides) {
+        var sidesDifference = newSides - oldSides
+        if (sidesDifference > 0) {
+          for (var i = 1; i <= sidesDifference; i++) {
+            this.stats.push(this.newRandomValue());
+          }
+        } else {
+          var absoluteSidesDifference = Math.abs(sidesDifference)
+          for (var i = 1; i <= absoluteSidesDifference; i++) {
+            this.stats.shift()
+          }
+        }
+      },
+      stats: function (newStats) {
+        TweenLite.to(this.$data, this.updateInterval / 1000,
+          { points: generatePoints(newStats) })
+      }
+    },
+    mounted: function () {
+      this.resetInterval()
+    },
+    methods: {
+      randomizeStats: function () {
+        var vm = this
+        this.stats = this.stats.map(function () {
+          return vm.newRandomValue()
+        })
+      },
+      newRandomValue: function () {
+        return Math.ceil(this.minRadius + Math.random() * (100 - this.minRadius))
+      },
+      resetInterval: function () {
+        var vm = this
+        clearInterval(this.interval)
+        this.randomizeStats()
+        this.interval = setInterval(function () {
+          vm.randomizeStats();
+        }, this.updateInterval)
+      }
+    }
+  })
+  function valueToPoint(value, index, total) {
+    var x = 0
+    var y = -value * 0.9
+    var angle = Math.PI * 2 / total * index
+    var cos = Math.cos(angle)
+    var sin = Math.sin(angle)
+    var tx = x * cos - y * sin + 100
+    var ty = x * sin + y * cos + 100
+    return { x: tx, y: ty }
+  }
+  function generatePoints(stats) {
+    var total = stats.length;
+    return stats.map(function (stat, index) {
+      var point = valueToPoint(stat, index, total);
+      return point.x + ',' + point.y
+    }).join(' ')
+  }
+</script>
+```
+
+#### 把过渡放到组件里
+
+管理太多的状态过渡会很快的增加 Vue 实例或者组件的复杂性，幸好很多的动画可以提取到专用的子组件。
+
+```html
+  <div id="addNumber">
+    <input v-model.number="firstNumber" type="number" step="20"/>
+    +
+    <input v-model.number="secondNumber" type="number" step="20">=
+    {{result}}
+    <p>
+      <animated-integer v-bind:value="firstNumber"></animated-integer>+
+      <animated-integer v-bind:value="secondNumber"></animated-integer>=
+      <animated-integer v-bind:value="result"></animated-integer>
+    </p>
+  </div>
+<script>
+  // 这种复杂的补间动画逻辑可以被复用
+// 任何整数都可以执行动画
+// 组件化使我们的界面十分清晰
+// 可以支持更多更复杂的动态过渡
+// 策略。
+Vue.component('animated-integer',{
+  template:'<span>{{tweeningValue}}</span>',
+  props:{
+    value:{
+      type:Number,
+      required:true
+    }
+  },
+  data:function(){
+    return {
+      tweeningValue:0
+    }
+  },
+  watch:{
+    value:function(newValue,oldValue){
+      this.tween(0,this.value)
+    }
+  },
+  mounted:function(){
+    this.tween(0,this.value);
+  },
+  methods:{
+    tween:function(starValue,endValue){
+      var vm =this
+      function animate(){
+        if(TWEEN.update()){
+          requestAnimationFrame(animate)
+        }
+      }
+      new TWEEN.Tween({tweeningValue:starValue})
+      .to({tweeningValue:endValue},500)
+      .onUpdate(function(){
+        vm.tweeningValue = this.tweeningValue.toFixed(0)
+      })
+      .start()
+
+      animate()
+    }
+  }
+})
+// 所有的复杂度都已经从 Vue 的主实例中移除！
+new Vue({
+  el: '#addNumber',
+  data: {
+    firstNumber: 20,
+    secondNumber: 40
+  },
+  computed: {
+    result: function () {
+      return this.firstNumber + this.secondNumber
+    }
+  }
+})
+</script>
+```
 

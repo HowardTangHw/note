@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Document</title>
+</head>
+
+<body>
+
+</body>
+
+</html>
+<script src='../vue.js'></script>
+<script>
+  Vue.component('my-special-transition', {
+    template: '\
+    <transition\
+      name="very-special-transition"\
+      mode="out-in"\
+      v-on:before-enter="beforeEnter"\
+      v-on:after-enter="afterEnter"\
+    >\
+      <slot></slot>\
+    </transition>\
+  ',
+    methods: {
+      beforeEnter: function (el) {
+        // ...
+      },
+      afterEnter: function (el) {
+        // ...
+      }
+    }
+  })
+
+  // 函数组件
+  Vue.component('example', {
+    functional: true,
+    render: function (creatElement, context) {
+      var data = {
+        props: {
+          name: 'very-special-transition',
+          mode: 'out-in'
+        },
+        on: {
+          beforeEnter: function (el) {
+            // ...
+          },
+          afterEnter: function (el) {
+            // ...
+          }
+        }
+      }
+      return creatElement('transition',data,context,children)
+    }
+  }) 
+</script>
