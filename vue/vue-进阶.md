@@ -1155,19 +1155,19 @@ new Vue({
 管理太多的状态过渡会很快的增加 Vue 实例或者组件的复杂性，幸好很多的动画可以提取到专用的子组件。
 
 ```html
-  <div id="addNumber">
-    <input v-model.number="firstNumber" type="number" step="20"/>
-    +
-    <input v-model.number="secondNumber" type="number" step="20">=
-    {{result}}
-    <p>
-      <animated-integer v-bind:value="firstNumber"></animated-integer>+
-      <animated-integer v-bind:value="secondNumber"></animated-integer>=
-      <animated-integer v-bind:value="result"></animated-integer>
-    </p>
-  </div>
+<div id="addNumber">
+  <input v-model.number="firstNumber" type="number" step="20"/>
+  +
+  <input v-model.number="secondNumber" type="number" step="20">=
+  {{result}}
+  <p>
+    <animated-integer v-bind:value="firstNumber"></animated-integer>+
+    <animated-integer v-bind:value="secondNumber"></animated-integer>=
+    <animated-integer v-bind:value="result"></animated-integer>
+  </p>
+</div>
 <script>
-  // 这种复杂的补间动画逻辑可以被复用
+// 这种复杂的补间动画逻辑可以被复用
 // 任何整数都可以执行动画
 // 组件化使我们的界面十分清晰
 // 可以支持更多更复杂的动态过渡
@@ -1224,6 +1224,249 @@ new Vue({
       return this.firstNumber + this.secondNumber
     }
   }
+})
+</script>
+```
+
+
+
+
+
+## 可复用性&组合
+
+### 混合
+
+#### 基础
+
+混合对象可以包含任意组件选项.以组件使用混合对象时,所有混合对象的选项都将被混入该组件本身的选项.
+
+```javascript
+//混合对象
+var myMixin = {
+    created(){
+        this.hello();
+    },
+  	methods:{
+        hello(){
+            console.log('hello from mixin!')
+        }
+    }
+}
+//定义一个使用混合对象的组件
+var Component = Vue.extend({
+    mixins:[myMixin]
+})
+
+var component = new Component() // => "hello from mixin!"
+
+```
+
+
+
+#### 选项合并
+
+当组件和混合对象具有`同名选项`时:
+
+- 同名钩子函数将混合为一个数组,然后都被调用,并且`混合对象的钩子`将在`组件自身钩子`**之前**调用
+
+```javascript
+var mixin = {
+    created(){
+        console.log('混合对象钩子先被调用')
+    }
+}
+
+new Vue ({
+    mixins:[mixin],
+  	created(){
+        console.log('组件钩子被调用')
+    }
+})
+// => "混合对象的钩子被调用"
+// => "组件钩子被调用"
+```
+
+- 值为对象的选项,例如`methods`,`components`和`directives`,将被混合为同一个对象,当两个对象键名冲突时,取组件`对象`的键值对
+
+```javascript
+var mixin = {
+    methods:{
+        foo(){
+            console.log('foo');
+        },
+      	conflicting(){
+        	console.log('from mixin')
+    	}
+    }
+}
+var vm = new Vue({
+    mixins:[mixin],
+  	methods:{
+        bar(){
+            console.log('bar');
+        },
+      	conflicting(){
+            console.log('from self')
+        }
+    }
+})
+vm.foo() // => "foo"
+vm.bar() // => "bar"
+vm.conflicting() // => "from self"
+```
+
+:warning:注意:`Vue.extend()`也是同样的策略进行合并
+
+
+
+#### 自定义选项合并策略
+
+自定义选项将使用默认策略,可以简单覆盖已有值.
+
+如果想让自定义选项以自定义逻辑合并，可以向 `Vue.config.optionMergeStrategies` 添加一个函数：
+
+```javascript
+Vue.config.optionMergeStrategies.myOption = function (toVal,fromVal){
+    // return mergedVal
+}
+```
+
+对于大多数对象选项,可以使用`methods`的合并策略:
+
+```js
+var strategies = Vue.config.optionMergeStrategies
+strategies.myOption = strategies.methods
+```
+
+更多高级的例子可以在vuex的1.x混合策略里找到:
+
+```js
+const merge = Vue.config.optionMergeStrategies.computed
+Vue.config.optionMergeStrategies.vuex = function (toVal, fromVal) {
+  if (!toVal) return fromVal
+  if (!fromVal) return toVal
+  return {
+    getters: merge(toVal.getters, fromVal.getters),
+    state: merge(toVal.state, fromVal.state),
+    actions: merge(toVal.actions, fromVal.actions)
+  }
+}
+```
+
+### 自定义指令
+
+#### 简介
+
+除了默认设置的核心指令(`v-model`和`v-show`),Vue也允许注册自定义指令,
+
+在Vue2.0里面,代码复用的主要形式和抽奖是组件,然后有的情况下,你仍然需要对纯dom元素进行底层操作,这时候就会用到自定义指令.
+
+```html
+<!-- 页面加载后 自动获取焦点 -->
+<div id="simplest-directive-example">
+  <input v-focus>
+</div>
+<script>
+//可复用的全局自定义指令
+Vue.directive('focus',{
+  // 当绑定元素插入到 DOM 中。钩子函数
+  inserted(el){
+    el.focus()
+  }
+})
+new Vue({
+  el:"#simplest-directive-example"
+})
+//注册局部指令
+new Vue({
+  el: "#simplest-directive-example",
+  directives: {
+    focus: {
+      // 钩子函数 当绑定元素插入到 DOM 中。
+      inserted: function (el) {
+        el.focus();
+      }
+    }
+  }
+})
+</script>
+```
+
+
+
+#### 钩子函数
+
+- `bind`:只调用一次,指令第一次绑定到元素时调用,用这个钩子函数可以定义一个在绑定时执行一次的初始化动作.
+- `inserted`:被绑定元素插入父节点时调用(父节点存在即可调用,不必存在与document中).
+- `update`:所在组件的VNode更新时调用,**但是可能发生在其孩子的VNode更新之前**. 指令的值可能发生了改变也可能没有,但是可以通过比较更新前后的值来忽略不必要的模板更新
+- `componentUpdated`: 所在组件的Vnode **及其孩子的VNode**全部更新时调用
+- `unbind`:只调用一次,指令与元素解绑时调用
+
+
+
+#### 钩子函数的参数
+
+- `el`:指令所绑定的元素,可以用来直接操作DOM.
+- `binding`:一个对象,包含以下属性:
+  + name:指令名,不包括`v-`前缀
+  + value:指令绑定的值,例如`v-my-directive = "hhhh"`,value的值就是`hhhh`
+  + oldValue: 指令绑定的前一个值,仅在`update`和`componentUpdate`中可用,无论值是否改变都可以用(可以通过比较更新前后的值来忽略不必要的模板更新)
+  + expression:绑定值的字符串形式.例如`v-my-directive="1+1"`,expression的值就是`1+1`
+  + arg:传给指令的参数.例如:`v-my-directive:foo`,arg的值就是`foo`.
+  + modifiers:一个包含修饰符的对象,例如:`v-my-directive.foo.bar`, 修饰对象modifiers的值是`{foo:true,bar:true}`
+- `vnode`:vue编译生成的虚拟节点,[Vue Node APi](https://cn.vuejs.org/v2/api/#VNode-接口)
+- `oldVnode`:上一个虚拟节点,仅在`update`和`componentUpdated`钩子中可用.
+
+> :warning:除了 `el` 之外，其它参数都应该是只读的，尽量不要修改他们。如果需要在钩子之间共享数据，建议通过元素的 [dataset](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/dataset) 来进行。
+
+自定义钩子样例:
+
+```html
+<div id="hook-arguments-example" v-demo:foo.a.b="message"></div>
+<script>
+Vue.directive('demo', {
+  bind: function (el, binding, vnode) {
+    var s = JSON.stringify
+    el.innerHTML =
+      'name: '       + s(binding.name) + '<br>' +
+      'value: '      + s(binding.value) + '<br>' +
+      'expression: ' + s(binding.expression) + '<br>' +
+      'argument: '   + s(binding.arg) + '<br>' +
+      'modifiers: '  + s(binding.modifiers) + '<br>' +
+      'vnode keys: ' + Object.keys(vnode).join(', ')
+  }
+})
+new Vue({
+  el: '#hook-arguments-example',
+  data: {
+    message: 'hello!'
+  }
+})
+</script>
+```
+
+#### 函数简写
+
+如果只想在`bind`和`update`钩子上重复动作,并且不想关心其他钩子的函数
+
+简写:
+
+```js
+Vue.directive('color-swatch',function(el,binding){
+    el.style.backgroundColor = binding.value
+})
+```
+
+#### 对象字面量
+
+如果指令需要多个值，可以传入一个 JavaScript 对象字面量;指令函数能够接受所有合法类型的 JavaScript 表达式。
+
+```html
+<div v-demo="{color:'white',text:'hello!'}"</div>
+<script>
+Vue.directive('demo',function(el,binding){
+    console.log(binding.value.color) // white
+  	console.log(binding.value.text) // hello
 })
 </script>
 ```
