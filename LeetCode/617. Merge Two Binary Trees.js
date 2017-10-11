@@ -17,7 +17,7 @@
 var mergeTrees = function(t1, t2) {
   if (t1 && t2) {
     const treeNode = new TreeNode(t1.val + t2.val);
-    // 返回的只可能是一边的treeNode 或者两者相加的treeNode 
+    // 返回的只可能是一边的treeNode 或者两者相加的treeNode
     treeNode.left = mergeTrees(t1.left, t2.left);
     treeNode.right = mergeTrees(t1.right, t2.right);
     return treeNode;
@@ -29,4 +29,4 @@ var mergeTrees = function(t1, t2) {
  * 然后用t1不断相加,然后返回t1就行了,可是出错了,不断的undefined
  * 因为 树的结构是有val和left和right,必须是3者都存在的,而我当时只是简单的val相加,没有顾及到left 和right
  * 所以要返回一个treeNode
- */  
+ */

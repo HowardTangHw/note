@@ -40,3 +40,4 @@ var maxAreaOfIsland = function(grid) {
 var grid = [[1]];
 
 maxAreaOfIsland(grid);
+

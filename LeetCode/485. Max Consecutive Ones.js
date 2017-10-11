@@ -8,14 +8,18 @@
  */
 var findMaxConsecutiveOnes = function(nums) {
   var len = nums.length,
-    arr = [];
+    // arr = [];
+    num=0
   result = [];
   for (var i = 0; i < len + 1; i++) {
     if (nums[i] == 0 || i == len) {
-      result.push(arr.length);
-      arr = [];
+      // result.push(arr.length);
+      // arr = [];
+      result.push(num);
+      num = 0;
     }
-    if (nums[i] == 1) arr.push(1);
+    // if (nums[i] == 1) arr.push(1);
+    if (nums[i] == 1) num++;
   }
   return Math.max(...result);
 };
