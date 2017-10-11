@@ -3,7 +3,8 @@
 ### 计划
 
 - [ ] [ECMAScript6 入门](http://es6.ruanyifeng.com/)  
-- [ ] LeetCode Easy 30题 
+- [x] LeetCode Easy 30题 
+- [ ] LeetCode 60题 
 - [x] [Underscore.js 源码解读 & 系列文章](https://github.com/hanzichi/underscore-analysis)  
 - [x] 学习了解配置gulp
 - [x] [了解webpack](https://doc.webpack-china.org/)
