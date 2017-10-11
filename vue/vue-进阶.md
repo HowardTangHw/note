@@ -1471,3 +1471,461 @@ Vue.directive('demo',function(el,binding){
 </script>
 ```
 
+
+
+
+
+### 渲染函数 & JSX
+
+#### 基础
+
+Vue官方推荐绝大部分情况下使用`template`来创建HTML,但是在某些场景中,真的需要javascript的完全变成能力(jsx),这就是**render函数**,它比templete更接近编译器.
+
+>  根据level动态出不同的heading标签组件
+
+```html
+<h1>
+  <a name="hello-world" href="#hello-world">
+    Hello World!
+  </a>
+</h1>
+<!-- 定义组件接口 -->
+<anchored-heading :level="1">Hello world!</anchored-heading>
+<!-- 通过绑定的level prop动态生成heading标签组件 -->
+<script type="text/x-template" id="anchored-heading-template">
+  <h1 v-if="level === 1">
+    <slot></slot>
+  </h1>
+  <h2 v-else-if="level === 2">
+    <slot></slot>
+  </h2>
+  <h3 v-else-if="level === 3">
+    <slot></slot>
+  </h3>
+  <h4 v-else-if="level === 4">
+    <slot></slot>
+  </h4>
+  <h5 v-else-if="level === 5">
+    <slot></slot>
+  </h5>
+  <h6 v-else-if="level === 6">
+    <slot></slot>
+  </h6>
+</script>
+<script>
+  Vue.component('anchored-heading', {
+  template: '#anchored-heading-template',
+  props: {
+    level: {
+      type: Number,
+      required: true
+    }
+  }
+})
+</script>
+```
+
+在这种场景中使用 template 并不是最好的选择：首先代码冗长，为了在不同级别的标题中插入锚点元素，我们需要重复地使用 `<slot></slot>`。
+
+虽然模板在大多数组件中都非常好用，但是在这里它就不是很简洁的了。那么，我们来尝试使用 `render` 函数重写上面的例子：
+
+```html
+<!-- 定义组件接口 -->
+<anchored-heading :level="1">Hello world!</anchored-heading>
+<!-- render重写 -->
+<script>
+  Vue.component('anchored-heading',{
+      render(){
+          return creatElement(
+          'h' + this.level,//tag name标签名称
+           this.$slots.default // 子组件的阵列
+          )
+      },
+      props:{
+          level:{
+              type:Number,
+              required:true
+          }
+      }
+  })
+</script>
+```
+
+这样代码精简很多，但是需要非常熟悉 Vue 的实例属性。在这个例子中,需要知道当不使用`slot`属性向组件传递内容时,比如`anchored-heading`中的`Hello,World!`,这些子元素被存储在实例中的`$slots.default`中.
+
+[实例属性](https://cn.vuejs.org/v2/api/#实例属性)
+
+
+
+#### 节点、树 及虚拟DOM
+
+
+
+```html
+<div>
+  <h1>My title</h1>
+  Some text content
+  <!-- TODO: Add tagline -->
+</div>
+```
+
+当浏览器读到这些代码时，它会建立一个`Dom树`来保持追踪
+
+HTML 的 DOM 节点树如下图所示：
+
+![DomNode 节点](https://cn.vuejs.org/images/dom-tree.png)
+
+每个元素都是一个节点。每片文字也是一个节点。甚至注释也都是节点。一个节点就是页面的一个部分。
+
+高效的更新所有这些节点会是比较困难的,不过vue已经处理好了,可以是在一个模板里:
+
+```html
+<h1>
+  {{blogTitle}}
+</h1>
+```
+
+渲染函数里：
+
+```javascript
+render(createElement){
+    return creatElement('h1',this.blogTitle)
+}
+```
+
+在这两种情况下，Vue 都会自动保持页面的更新，即便 `blogTitle` 发生了改变。
+
+##### 虚拟Dom
+
+Vue 通过建立一个**虚拟 DOM** 对真实 DOM 发生的变化保持追踪。
+
+```js
+return createElement('h1', this.blogTitle)
+```
+
+`createElement`返回的**不是一个实际的Dom元素**.它更准确的名字是`createNodeDescription`(创建节点事件?),包含的信息会告诉Vue页面上需要渲染什么样节点,及其子节点.
+
+我们也叫这样的节点为`虚拟节点(Virtual DOM)` ,Vue中将它简写为`VNode`,`虚拟DOM`是Vue组件树简历起来的整个VNode树的称呼
+
+
+
+#### `createElement`参数
+
+```javascript
+// @returns {VNode}
+createElement(
+  /* 第一个参数
+   * {String | Object | Function}
+   * 一个HTML标签字符串,组件选项对象,或者一个返回值类型为String / Object的函数
+   * 必要参数
+   */
+  'div',
+  /* {Object}
+   * 一个包含模板相关属性对象 
+   * 可以在template中使用这些属性.
+   * 可选参数
+   */
+  {
+      //....深入data对象
+  },
+  /* 第三个参数
+   * {String|Array}
+   * 子节点(VNodes),由 creatElement() 构建而成
+   * 或使用字符串来生成"文本节点"
+   * 可选参数
+   */
+  [
+    'some worlds',
+    createElement('h1','topNews'),
+    createElement(MyComponent,{
+        props:{
+            someProp:'foobar'
+        }
+    })
+  ]
+)
+```
+
+
+
+##### 深入data对象(上方的第二个参数)
+
+就好像在模板语法中,`v-bind:class`和`v-bind:style`会被区别对待,在VNode数据对象中,下列属性名是级别最高的字段.该对象也允许绑定普通的HTML特性,跟DOM属性一样,比如`innerHTML`(这样会取代`v-html`指令).
+
+```js
+{
+  // 和`v-bind:class`一样的 API
+  class: {
+    foo: true,
+    bar: false
+  },
+  // 和`v-bind:style`一样的 API
+  style: {
+    color: "red",
+    fontSize: "14px"
+  },
+  //正常的HTML特性
+  attrs: {
+    id: "foo"
+  },
+  // 组件 props
+  props: {
+    myProp: "bar"
+  },
+  // Dom属性
+  domProps: {
+    innerHTML: "baz"
+  },
+  // 事件监听基于 on
+  // 所以不再支持如 v-on:keyip.enter 修饰器
+  // 需要手动匹配 keyCode
+  on: {
+    click: this.clickHandler
+  },
+  // 仅对于组件,用于监听原生事件,而不是组件内部使用vm.$emit 触发的时间
+  nativeOn: {
+    click: this.nativeClickHandler
+  },
+  // 自定义指令.注意事项：不能对绑定的旧值设值
+  // Vue会持续追踪
+  directives: [
+    {
+      name: "my-custon-directive",
+      value: "2",
+      expression: "1+1",
+      arg: "foo",
+      modifiers: {
+        bar: true
+      }
+    }
+  ],
+  // Scoped slots in the form of
+  // { name : props => VNode | Array<VNode>}
+  scopedSlots: {
+    default: props => creatElement("span", props.text)
+  },
+  //如果组件是其他组件的子组件,需为插槽指定名称
+  slot: "name-of-slot",
+  //其他特殊顶层属性
+  key: "myKey",
+  ref: "myRef"
+};
+```
+
+
+
+##### 完整示例
+
+```js
+var getChildrenTextContent = function(children) {
+  return children
+    .map(function(node) {
+      return node.children ? getChildrenTextContent(node.children) : node.text;
+    })
+    .join("");
+};
+Vue.component("anchored-heading", {
+  render(createElement) {
+    // create kebabCase id
+    var headingId = getChildrenTextContent(this.$slots.default)
+      .toLowerCase()
+      .replace(/\W+/g, "-")
+      .replace(/(^\-|\-$)/g, "");
+
+    return createElement("h" + this.level, [
+      createElement(
+        "a",
+        {
+          attrs: {
+            name: headingId,
+            href: "#" + headingId
+          }
+        },
+        this.$slots.default
+      )
+    ]);
+  },
+  props: {
+    level: {
+      type: Number,
+      required: true
+    }
+  }
+});
+```
+
+
+
+##### 约束
+
+**VNodes必须唯一**
+
+组件树中的所有 VNodes 必须是唯一的。这意味着，下面的 render function 是无效的：
+
+```js
+render(createElemente){
+    var myParagraphVNode = createElmeent('p','hi')
+    return createElement('div',[
+        //错误 重复的VNodes
+      	myParagraphVNode,myParagraphVNode
+    ])
+}
+```
+
+如果需要重复很多次的元素/组件,可以使用工厂函数实现
+
+```js
+//利用工厂函数完美有效地渲染了20个重复的段落
+render(createElement){
+    return createElement('div',
+ 	 Array.apply(null,{length:20}).map(()=>{
+        return createElement('p','hi')
+    })
+  )
+}
+```
+
+
+
+#### 使用javascript代替模板功能
+
+##### `v-if`和`v-for`
+
+由于使用原生的 JavaScript 来实现某些东西很简单，Vue 的 render 函数没有提供专用的 API。比如，template 中的 `v-if` 和 `v-for`：
+
+```html
+<ul v-if="items.length">
+	<li v-for="item in items">{{item.name}}</li>  
+</ul>
+<p v-else>
+  No items found.
+</p>
+```
+
+这些都会在 render函数中被javascript的`if`/`else`和`map`重写:
+
+```js
+render(createElement){
+  if(this.items.length){
+      return createElement('ul',this.itmens.map((item)=>{
+        return createElement('li',item.name)
+      }))
+  } else {
+    return createElement('p','No items found.')
+  }
+}
+```
+
+##### `v-model`
+
+render函数中没有与`v-model`相应的api,必须自己来实现相应的逻辑
+
+```js
+render(createElement){
+    var self = this;
+  	return createElement('input',{
+        domProps:{
+            value:self.value
+        },
+      	on:{
+            input(event){
+                self.value = event.target.value
+              	self.$emit('input',event.target.value)
+            }
+        }
+    })
+}
+```
+
+
+
+##### 事件 & 按键修饰符
+
+| Modifier(s)                         | Prefix |
+| :---------------------------------- | ------ |
+| `.passive`                          | `&`    |
+| `.capture`                          | `!`    |
+| `.once`                             | `~`    |
+| `.capture.once ` or `.once.capture` | `~!`   |
+
+例如:
+```js
+on:{
+    '!click':this.doThisInCapturingMode,
+    '~keyup':this.doThisOnce,
+    '~!mouse':this.doThisOnceInCapturingMode
+}
+```
+对于其他的修饰符，前缀不是很重要，因为你可以在事件处理函数中使用事件方法：
+
+| Modifier(s)                              | Equivalent in Handler                    |
+| ---------------------------------------- | ---------------------------------------- |
+| `.stop`                                  | `event.stopPropagation()`                |
+| `.prevent`                               | `event.preventDefault()`                 |
+| `self`                                   | `if(event.target !== event.currentTarget) return` |
+| Keys:`.enter`,`.13`                      | `if(event.keyCode !== 13) return `(change`13` to another key code for other key modifiers) |
+| Modifiers Keys: `.ctrl`,`.alt`,`.shift`,`.meta` | `if(!event.ctrlKey) return`(change `ctrlKey` to `altKey`,`shiftKey`,or  `metaKey`,respectively) |
+
+一个使用所有修饰符的例子：
+
+```js
+on : {
+    keyup:function(event){
+      // 如果触发事件的元素不是事件绑定的元素
+      // 则返回
+      if(event.target !== event.currentTarget) return
+      // 如果按下去的不是enter键或者没有同时按下shift键 则返回
+      if(!event.shiftKey || event.keyCode !== 13) return
+      //阻止事件冒泡
+      event.stopPropagation()
+      //阻止 该元素默认的keyup 事件
+      event.preventDefault()
+      //...
+    }
+}
+```
+
+
+
+##### 插槽
+
+可以利用`this.$slots`获取VNodes列表中的静态内容:
+
+```js
+render: function (createElement) {
+  // `<div><slot></slot></div>`
+  return createElement('div', this.$slots.default)
+}
+```
+
+还可以从 [`this.$scopedSlots`](https://cn.vuejs.org/v2/api/#vm-scopedSlots) 中获得能用作函数的作用域插槽，这个函数返回 VNodes(子传父)：
+
+```js
+render(createElement) {
+    //<div><slot :text="msg"></slot></div>
+  return createElement('div',[
+      this.$scopedSlots.default({
+          text:this.msg
+      })
+  ])
+}
+```
+
+如果要向子组件传递作用域插槽,可以利用VNode数据中的 `scopedSlots`域(父传子):
+
+```js
+render(createElement){
+    return createElement('div',[
+        createEelment('child',{
+        // pass `scopedSlots` in the data object
+      	// in the form of { name: props => VNode | Array<VNode> }
+      		scopedSlots:{
+              default(props){
+                  return createElement('span',props.text)
+              }
+            }
+        })
+    ])
+}
+```
+
