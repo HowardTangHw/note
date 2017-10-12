@@ -1929,3 +1929,299 @@ render(createElement){
 }
 ```
 
+
+
+####　JSX
+
+写太多`render`函数,会感觉到痛苦
+
+```js
+createElement(
+  'anchored-heading', {
+    props:{
+        level:1
+   }
+ },[
+     createElement('span','Hello'),
+   	 ' world'
+ ]
+)
+```
+
+模板就如此简单:
+
+```html
+<anchored-heading :level="1">
+	<span>Hello</span> world!
+</anchored-heading>
+```
+
+有一个[babel-plugin-transform-vue-js](https://github.com/vuejs/babel-plugin-transform-vue-jsx) 插件,用于在Vue中使用JSX.可以让我们回到更接近模板语法上
+
+```js
+import AnchoredHeading form './AnchoredHeading.vue'
+
+new Vue({
+    el:"#demo",
+  	render (h) {
+        return (
+          <AnchoredHeading leve={1}>
+          	<span>Hello</span> world!
+          </AnchoredHeading>
+        )
+    }
+})
+```
+
+> :warning:将 `h` 作为 `createElement` 的别名是 Vue 生态系统中的一个通用惯例，实际上也是 JSX 所要求的，如果在作用域中 `h` 失去作用，在应用中会触发报错。
+
+[JSX映射到javascript](https://github.com/vuejs/babel-plugin-transform-vue-jsx#usage)
+
+
+
+#### 函数式组件
+
+上面DEMO的锚点标题组件,没有管理或者监听任何传递给他的状态,也没有声明周期方法,它只是一个接受参数的函数.
+
+在这个例子中，我们标记组件为 `functional`，这意味它是无状态 (没有 `data`)，无实例 (没有 `this` 上下文)。
+
+**函数式组件**:
+
+```js
+Vue.component('my-component',{
+    funcional:true,
+  	//为了弥补缺少的实例
+  	// 提供第二个参数作为上下文(this)
+  	render(h,context) {
+        //...
+    },
+  	// Props 可选
+  	props:{
+        //...
+    }
+})
+```
+
+> :warning:在 `2.3.0 之前`的版本中，如果一个函数式组件想要接受 props，则 `props` 选项是**必须**的。在` 2.3.0 或以上的版本`中，**可以省略** `props` 选项，所有组件上的属性都会被`自动解析为 props`。
+
+
+
+当标记为`functional`后,组件的render函数之间简单更新增加`context`参数作为上下文,`this.$slots.default` 更新为 `context.children`，之后`this.level` 更新为 `context.props.level`。
+
+组件需要的一切都是通过上下文传递,包括
+
+- `props`: 提供props的对象
+- `children`: VNode子节点的数组
+- `slots`: slots对象
+- `data`: 传递给组件的data对象
+- `parent`: 对父组件的引用
+- `listeners`:(2.3.0+)一个包含了组件上所注册的`v-on`侦听器的对象.这只是一个指向`data.on`的别名
+- `injections` : (2.3.0+)如果使用了[`inject`](https://cn.vuejs.org/v2/api/#provide-inject)选项,则该对象包含了应当被注入的属性.
+
+函数式组件只是一个函数,所以渲染开销也低很多,然而,对持久化实例的缺乏也意味着函数式组件不会出现在`VUE DEVTOOLS` 的组件树里.
+
+在作为包装组件时,它们也同样非常有用:
+
+- 程序化地在多个组件中选择一个
+- 将children,props,data传递给子组件之前操作它们.
+
+一个依赖传入props的值的`smart-list`组件例子:
+
+```js
+var EmptyList = { /*some code*/ }
+var TableList = { /*some code*/ }
+var OrderedList = { /*some code*/ }
+var UnorderedList = { /*some code*/ }
+
+Vue.component('smart-list',{
+    functional: true,
+  	render(createElement,context){
+        function appropriateListComponent () {
+            var items = context.props.items
+            
+            if(items.length === 0 ) return EmptyList
+          	if(typeof items[0] === 'object') return TableList
+            if(context.props.isOrdered) return OrderedList
+            
+            return UnorderedList
+        }
+      return createdElement(
+        appropriateListComponent(),
+        context.data,
+        context,children
+      )
+    },
+  	props: {
+        items:{
+            type:Array,
+          	required:true
+        },
+      	isOrdered:Boolean
+    }
+})
+```
+
+##### `slots()`和`children`对比
+
+```html
+<my-functional-component>
+  <p slot="foo">
+    first
+  </p>
+  <p>
+    second
+  </p>
+</my-functional-component>
+```
+
+对于这个组件 使用`children`会返回两个段落标签,而`slots().default`只会传递第二个匿名段落标签,`slots().foo`会传递第一个具名段落标签.同时拥有`children`和`slots()`,因此可以选择让组件通过`slot()`系统分发或简单通过`children`接收,让其他组件去处理
+
+
+
+### 插件
+
+#### 开发插件
+
+插件会为 Vue添加全局功能,插件范围没有限制:
+
+1. 添加全局方法或者属性,如[vue-custom-element](https://github.com/karol-f/vue-custom-element)
+2. 添加全局资源:指令/过滤器/过渡等,如 [vue-touch](https://github.com/vuejs/vue-touch)
+3. 通过全局mixin方法添加一些组件选项,如: [vue-router](https://github.com/vuejs/vue-router)
+4. 添加Vue实例方法,通过把它们添加到Vue.prototype上实现.
+5. 一个库,提供自己的API,同时提供上面提到的一个或多个功能,如: [vue-router](https://github.com/vuejs/vue-router)
+
+Vue.js的插件应当有一个公开的方法`install`.这个方法第一个参数是`Vue`构造器,第二个参数是一个可选的选项对象.
+
+```js
+MyPlugin.install=(Vue,options)=>{
+    // 1. 添加全局属性或方法
+  	Vue.myGlobalMethod = function(){
+        //逻辑...
+    }
+    
+    // 2.添加全局资源
+    Vue.directive('my-directive',{
+        bind(el,binding,vnode,oldVnode){
+            // 逻辑...
+        }
+      //some code...
+    })
+  
+  	// 3.注入组件
+  	Vue.mixin({
+        created:function(){
+            //逻辑....
+        }
+      //..some code
+    })
+  
+  	// 4.添加实例方法
+  	Vue.prototype.$MyMethod = function(methodOptions){
+        //逻辑...
+    }
+}
+```
+
+
+
+#### 使用插件
+
+通过全局Vue.use() 使用插件:
+
+```js
+//调用 Myplugin.install(vue)
+Vue.use(Myplugin)
+```
+
+也可以传入一个选项对象:
+
+```js
+Vue.use(MyPlugin,{someOption:true})
+```
+
+`Vue.use`会自动阻止注册相同的插件多次,届时只会注册一次该插件
+
+Vue.js官方提供的一些插件(如`Vue-router`)在检测到`Vue`是可访问的全局变量时会自动调用`Vue.use()`.然而在例如 CommonJS 的模块环境中，你应该始终显式地调用 `Vue.use()`：
+
+```js
+// 用 Browserify 或 webpack 提供的 CommonJS 模块环境时
+var Vue = require('vue')
+var VueRouter = require('vue-router')
+// 不要忘了调用此方法
+Vue.use(VueRouter)
+```
+
+[awesome-vue](https://github.com/vuejs/awesome-vue#components--libraries) 集合了来自社区贡献的数以千计的插件和库。
+
+
+
+###　过滤器
+
+Vue.js 允许自定义过滤器,可被用作一些常见的文本格式化。过滤器可以用在两个地方：**mustache插值和`v-bind`表达式**(后者从2.1.0+开始支持) .过滤器应该被添加在JS表达式尾部,由"管道符"(`|`) 指示:
+
+```html
+<!-- in mustaches --> 
+{{ message | capitalize }}
+
+<!-- in v-bind -->
+<div v-bind:id="rawId | formateId"></div>
+<script>
+ new Vue({
+   //....
+   filters:{
+       capitalize(value){
+           if(!value) return ''
+           value = value.toString()
+           return value.charAt(0).toUpperCase() + value.slice(1)
+       }
+   }	
+ })
+</script>
+```
+
+过滤器函数总是接收表达式的值(之前的操作链的结果)作为第一个参数.
+
+上方例子中,`capitalize`过滤器将会收到`message`的值作为第一个参数.
+
+
+
+过滤器可以串联:
+
+```html
+{{ message | filterA | filterB }}
+```
+
+在这个例子中,`filterA`被定义为接收单个参数的过滤器函数,表达式`message`的值将作为参数传到函数`filterA`中,然后继续调用同样被定义为接收单个参数的过滤器函数`filterB`,将 `filterA` 的结果传递到 `filterB` 中。
+
+
+
+过滤器是javasciprt函数,因此可以接收参数:
+
+```html
+{{ message | filterA('arg1',arg2) }}
+```
+
+`filterA`被定义为接收三个参数的过滤器函数.其中`message`的值作为第一个参数,普通字符串`arg1`作为第二个参数,表达式`arg2`取值后的值作为第三个参数.
+
+
+
+
+
+## 规模化
+
+### 路由
+
+
+
+#### 官方路由
+
+ [vue-router 库](https://github.com/vuejs/vue-router)
+
+ [vue-router 文档](https://router.vuejs.org/)
+
+
+
+#### 简单的路由
+
+[简单的路由](../demo/vue-2.0-simple-routing-example/)
+
