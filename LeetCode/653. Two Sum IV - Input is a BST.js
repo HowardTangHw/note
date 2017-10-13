@@ -26,3 +26,31 @@ var findTarget = function(root, k) {
   }
   return inputArr(root);
 };
+
+
+var findTarget = function(root, k) {
+  const values = [];
+  function inorder(node) {
+      if (!node) {
+          return;
+      }
+      // 先遍历左边(小的)再遍历右边(大的)
+      inorder(node.left);
+      values.push(node.val);
+      inorder(node.right);
+  }
+  inorder(root);
+  //因为是bst,所以肯定是小的在前 大的在后
+  let start = 0, end = values.length - 1;
+  while (start < end) {
+      const total = values[start] + values[end];
+      if (total > k) {
+          end--;
+      } else if (total < k) {
+          start++;
+      } else {
+          return true;
+      }
+  }
+  return false;
+};
