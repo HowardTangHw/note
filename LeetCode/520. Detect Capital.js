@@ -51,3 +51,14 @@ var detectCapitalUse = function(word) {
   //如果n=0 ,则全部为小写,否则判断n是不是和字符串长度一样(判断是不是全是大写)
   return n == 0 || n == len;
 };
+
+//谢晓珊版本:
+var detectCapitalUse = function(word) {
+  if (word == word.toUpperCase() || word == word.toLowerCase()) return true;
+  if (
+    word.charAt(0) == word.charAt(0).toUpperCase() &&
+    word.substring(1) == word.substring(1).toLowerCase()
+  )
+    return true;
+  return false;
+};
