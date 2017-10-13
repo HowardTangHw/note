@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+
+<body>
+  <script src="https://unpkg.com/vue/dist/vue.js"></script>
+  <!-- 引入router -->
+  <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+  <div id="app">
+    <router-link to="/user/index/">GO TO index</router-link>
+    <router-link to="/user/index/foo">GO TO FOO</router-link>
+    <router-link to="/user/index/bar">GO TO BAR</router-link>
+    <router-view></router-view>
+  </div>
+</body>
+
+</html>
+<script>
+  const User = {
+    template: `
+    <div id="user">
+      <p>{{$route.params.id}}</p>
+      <router-view></router-view>
+    </div>
+    `
+  }
+  const Foo = {
+    template: '<div>这是Foo</div>'
+  }
+  const Bar = {
+    template: '<div>这是Bar</div>'
+  }
+  const index = {
+    template: '<div>这是首页</div>'
+  }
+  const routes = [
+    {
+      path: '/user/:id', component: User,
+      children: [
+        { path: '', component: index },
+        { path: 'foo', component: Foo },
+        { path: 'bar', component: Bar }
+      ]
+    }
+  ];
+  const router = new VueRouter({
+    routes
+  })
+  const app = new Vue({
+    router
+  }).$mount('#app');
+</script>

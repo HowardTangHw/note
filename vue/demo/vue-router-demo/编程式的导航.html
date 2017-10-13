@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+
+<body>
+  <script src="https://unpkg.com/vue/dist/vue.js"></script>
+  <!-- 引入router -->
+  <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+  <div id="app">
+    <router-link to="/user/foo">GO TO FOO</router-link>
+    <router-link to="/user/bar">GO TO BAR</router-link>
+    <router-link to="/userB/baidu/123">百度</router-link>
+    <div @click="click">123</div>
+    <router-view></router-view>
+  </div>
+</body>
+
+</html>
+<script>
+  //一个『路径参数』使用冒号 : 标记。当匹配到一个路由时，参数值会被设置到 this.$route.params，可以在每个组件内使用。
+  const User = {
+    template: '<div>User {{$route.params.id}}</div>',
+    beforeRouteUpdate(to, from, next) {
+      console.log('to' + to);
+      console.log(this.$route.params.id);
+      console.log('from' + from);
+      //别忘了next() 不然就不跳转了
+      next();
+    }
+  }
+  const UserB = {
+    template: '<a v-bind:href="link" target="_blank">{{$route.params.name}}id为{{$route.params.id}}</a>',
+    data: function () {
+      return {
+        link: 'https://www.baidu.com'
+      }
+    }
+  }
+  const routes = [
+    { path: '/user/:id', component: User },
+    { path: '/userB/:name/:id', component: UserB }
+  ]
+  const router = new VueRouter({
+    routes
+  })
+  router.push('foo')
+  const app = new Vue({
+    router,
+    methods:{
+      click(){
+        this.$router.push({ path: '/user/bar' },function(){
+          alert('OK');
+        })
+      }
+    }
+  }).$mount('#app');
+</script>
