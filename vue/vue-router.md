@@ -417,3 +417,136 @@ router.go(100)
 因此，如果你已经熟悉 [Browser History APIs](https://developer.mozilla.org/en-US/docs/Web/API/History_API)，那么在 vue-router 中操作 history 就是超级简单的。
 
 还有值得提及的，vue-router 的导航方法 （`push`、 `replace`、 `go`） 在各类路由模式（`history`、 `hash` 和 `abstract`）下表现一致。
+
+
+
+### 命名路由
+
+可以在创建Router实例的时候,在`routes`配置中,给某个路由设置名称
+
+```js
+const router = new VueRouter({
+    routes:[
+        {
+            path:'/user/:userId',
+          	//定义路由名称
+          	name:'user',
+          	componet:User
+        }
+    ]
+})
+```
+
+要链接到一个命名路由，可以给 `router-link` 的 `to` 属性传一个对象：
+
+```html
+<!-- name就是路由的名称 -->
+<router-link :to="{ name: 'user', params: { userId: 123 }}">User</router-link>
+```
+
+这跟代码调用 `router.push()` 是一回事：
+
+```js
+router.push({ name: 'user', params: { userId: 123 }})
+```
+
+这两种方式都会把路由导航到 `/user/123` 路径。
+
+
+
+### 命名视图
+
+如果想同时(同级)展示多个视图,而不是嵌套展示,例如创建一个布局,有`sidebar`(侧导航)和`main`(主内容)两个视图,这时候就要用到命名视图
+
+在界面中,可以拥有多个单独命名的视图,而不是只有一个单独的出口.
+
+如果视图`router-view`没有设置名字,那么默认为`default`
+
+```html
+<router-view class="view one"></router-view>
+<router-view class="view two" name="a"></router-view>
+<router-view class="view three" name="b"></router-view>
+```
+
+一个视图使用一个组件渲染,因此对于同个路由,多个视图就需要多个组件.确保正确使用`components`配置(要带上s):
+
+```js
+const router = new VueRouter({
+    routes: [
+        {
+            path:'/',
+          	components:{
+              default:Foo,
+              a:Bar,
+              b:Baz
+            }
+        }
+    ]
+})
+```
+
+
+
+### 重定向 & 别名
+
+#### 重定向
+
+『重定向』的意思是，当用户访问 `/a`时，URL 将会被替换成 `/b`，然后匹配路由为 `/b`
+
+重定向也是通过`routes`配置来完成,
+
+
+
+```js
+// /a重定向到/b
+const router = new VueRouter({
+    routes:[
+        {
+            path:'/a',
+          	redirect:'/b'
+        }
+    ]
+})
+```
+
+重定向的目标也可以是一个命名的路由:
+
+```js
+const router = new VueRouter({
+    routes:[
+        { path:'/a',redirect:{name:'foo'}}
+    ]
+})
+```
+
+甚至是一个方法,动态返回重定向目标:
+
+```js
+const router = new VueRouter({
+    routes : [
+        {
+            path:'/a',redirect : to={
+                //方法接收 目标路由 作为参数
+              	// return  重定向的 字符串路径/路径对象
+            }
+        }
+    ] 
+})
+```
+
+
+
+#### 别名
+
+**/a 的别名是 /b，意味着，当用户访问 /b 时，URL 会保持为 /b，但是路由匹配则为 /a，就像用户访问 /a 一样。**
+
+『别名』的功能让你可以自由地将 UI 结构映射到任意的 URL，而不是受限于配置的嵌套路由结构。
+
+```js
+const router = new VueRouter({
+  routes: [
+    { path: '/a', component: A, alias: '/b' }
+  ]
+})
+```
+

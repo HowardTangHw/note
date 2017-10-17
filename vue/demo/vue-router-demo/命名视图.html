@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+
+<body>
+  <script src="https://unpkg.com/vue/dist/vue.js"></script>
+  <!-- 引入router -->
+  <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+  <div id="app">
+
+  </div>
+</body>
+
+</html>
+<script>
+  const Home = { template: '<div>这是default</div>' };
+  const Foo = { template: '<div>这是Foo</div>' };
+  const Bar = { template: '<div>这是Bar</div>' };
+  const router = new VueRouter({
+    routes: [
+      {
+        path: '/', name: 'home', components: {
+          default: Home,
+          a: Foo,
+          b: Bar
+        }
+      },
+      {
+        path: '/other', name: 'other', components: {
+          default: Bar,
+          a: Home,
+          b: Foo
+        }
+      }
+    ]
+  })
+  new Vue({
+    router,
+    template: `
+    <div id="app">
+      <ul>
+        <li><router-link :to="{name:'home'}">Home</router-link></li>
+        <li><router-link :to="{name:'other'}">Foo</router-link></li>
+      </ul>
+      <router-view></router-view>
+      <router-view name="a"></router-view>
+      <router-view name="b"></router-view>
+    </div>
+    `
+  }).$mount('#app');
+</script>
