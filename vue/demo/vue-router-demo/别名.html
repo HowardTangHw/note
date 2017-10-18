@@ -25,7 +25,7 @@
     {
       path: '/home', component: Home,
       children: [
-        //absolute alias 别名为/foo  即/foo => 打开的是/home/foo
+        //absolute alias 别名为/foo  ==> /foo
         { path: 'foo', component: Foo, alias: '/foo' },
         // relative alis alias to /home/bar-alias
         { path: 'bar', component: Bar, alias: 'bar-alias' },
@@ -62,4 +62,30 @@
   `
   }).$mount('#app')
 
+
+  $.ajax({
+    type: "POST",
+    url: 'http://dev3.pcauto.com.cn:9977/autoMall/interface/outerInterface/cheshi/add_tuangou_prediction.jsp',
+    data: {
+      userName: encodeURIComponent($("#name").val()),
+      phone: '13655555555',
+      ipAreaId: 2,
+      regionId: 2,
+      platform: 2,
+      modelId: '0',
+      source: 6,
+      expirationDate: 14,
+      method: "create",
+      contentType: "application/x-www-form-urlencoded; charset=UF-8"
+    },
+    dataType: 'json',
+    success: function (data) {
+      if (data.status == 'ok' && data.statusCode == 0) {
+        $('.form-box').addClass('hide');
+        $('.show-box').removeClass('hide');
+      } else {
+        alert(data.message);
+      }
+    }
+  });
 </script>
