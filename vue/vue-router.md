@@ -1224,3 +1224,67 @@ scrollBehavior (to, from, savedPosition) {
 ```
 
 我们还可以利用[路由元信息](https://router.vuejs.org/zh-cn/advanced/meta.html)更细颗粒度地控制滚动。查看完整例子请[移步这里](https://github.com/vuejs/vue-router/blob/next/examples/scroll-behavior/app.js)。
+
+
+
+### 路由懒加载
+
+当打包构建应用时,(所有东西都放在一个bundle里面的话),JavaScript包会变得非常大,影响页面加载.如果我们能把不同路由对应的组件分割成不同的代码块,然后当路由被访问的时候才加载对应组件,这就很高效了.
+
+结合 Vue 的[异步组件](https://cn.vuejs.org/guide/components.html#异步组件)和 Webpack 的[代码分割功能](https://doc.webpack-china.org/guides/code-splitting-async/#require-ensure-/)，轻松实现路由组件的懒加载。
+
+首先,将一部组件定义为一个返回Promise的工厂函数(该函数返回的Promise应该resolve组件本身) :information_desk_person: 就是要把组件本身放在resolve中?
+
+```js
+const Foo = () => Promise.resolve({/* 组件定义对象 */});
+```
+
+
+
+第二,在Webpack 2中,可以使用[动态 import](https://github.com/tc39/proposal-dynamic-import)语法来定义代码分块点 (split point)：
+
+```js
+import('./Foo.vue')//返回的是Promise对象
+```
+
+
+
+> 注意：如果您使用的是 Babel，你将需要添加 [`syntax-dynamic-import`](https://babeljs.io/docs/plugins/syntax-dynamic-import/) 插件，才能使 Babel 可以正确地解析语法。
+
+
+
+第三,结合第一步第二步,定义一个能够被Webpack自动代码分割的异步组件.
+
+```js
+const Foo = () => import('./Foo.vue');
+```
+
+
+
+在路由配置中,什么都不需要改变:
+
+```js
+const router = new VueRouter({
+    routes:[
+        { path:'/foo', component:Foo }
+    ]
+})
+```
+
+
+
+按照自己的理解,就是路由切换==>Promis对象触发resolve==>组件加载==>组件渲染?
+
+
+
+#### 把组件按组分块
+
+想要把某个路由下的所有组件(或者某些组件)打包在同一个异步块(chunk)中.只需要使用**命名chunk**,一个特殊的注释语法来提供chunk name(需要Webpack>2.4).
+
+```js
+const Foo = () => import(/* webpackChunkName: "group-foo" */ './Foo.vue')
+const Bar = () => import(/* webpackChunkName: "group-foo" */ './Bar.vue')
+const Baz = () => import(/* webpackChunkName: "group-foo" */ './Baz.vue')
+```
+
+Webpack 会将任何一个异步模块与相同的块名称组合到相同的异步块中。(打包在同一个chunk中)
