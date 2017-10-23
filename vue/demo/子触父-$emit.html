@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="app">
+    <child @msgfn="func" :msg="message"></child>
+  </div>
+</body>
+
+</html>
+<script src='../vue2.js'></script>
+<script>
+  Vue.component('child', {
+    template: `
+ <button @click="childFunc">{{msg}}</button>
+  `,
+    props: {
+      msg: {
+        type: String,
+        required: true
+      }
+    },
+    data() {
+      return {
+        childMsg: 'this is child and count:',
+        count: 0
+      }
+    },
+    created() {
+      this.count = function () {
+        if (!Number.isNaN(localStorage.getItem('count'))) {
+          return localStorage.getItem('count')
+        }
+        return 0;
+      }();
+    },
+    methods: {
+      childFunc() {
+        this.$emit("msgfn", this.childMsg + this.count);
+        this.count++;
+        localStorage.setItem('count', this.count)
+      }
+    }
+  })
+
+  new Vue({
+    el: '#app',
+    data() {
+      return { message: 'this is father message' }
+    },
+    methods: {
+      func(msg) {
+        console.log(msg);
+      }
+    }
+  })
+</script>
