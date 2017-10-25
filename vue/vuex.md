@@ -138,7 +138,7 @@ console.log(store.state.count) // -> 1
 - State (状态存储)
 - Getter (类似计算属性:对状态进行计算)
 - Mutation (触发状态变更:同步)
-- Action
+- Action()
 - Module
 
 
@@ -579,3 +579,508 @@ store.commit('increment')
 
 
 
+#### Action
+
+Action 类似于 mutation,不同在于:
+
+- Action提交的是mutation,而不是直接变更状态.
+- Action可以包含任意异步操作.
+
+```js
+const stroe = new Vuex.Store({
+    state: {
+        count:0
+    },
+  	mutations: {
+        increment (state) {
+            state.count++
+        }
+    },
+  	actions: {
+        increment(context) {
+            context.commit('increment');
+        }
+    }
+})
+```
+
+Action 函数接受一个与store实例具有相同方法和属性的**context对象**,因此可以调用`context.commit`提交一个mutation ,或者通过`context.state`和`context.getters`来获取state和getters.
+
+因为是**context对象**,可以用到[参数解构](https://github.com/lukehoban/es6features#destructuring)来简化代码（特别是需要调用 `commit` 很多次的时候）：
+
+```js
+actions:{
+  increment({commit}){
+    commit('increment');
+  }
+}
+```
+
+
+
+##### 分发Action
+
+Action 通过`store.dispatch`方法触发:
+
+```js
+store.dispatch('increment');
+```
+
+与mutation的区别?
+
+- **Mutation必须同步执行**
+- **Action不受约束,可以在它内部执行异步操作**
+
+```js
+actions: {
+  incrementAsync({ commit }) {
+    setTimeout(()=>{
+        commit('increment')
+    },1000)
+  }
+}
+```
+
+Actions  支持同样的载荷方式(playload/传参)和对象方式进行分发:
+
+```js
+// 以载荷形式分发
+store.dispatch('incrementAsync',{
+    amount: 10
+})
+
+// 以对象形式分发
+store.dispatch({
+    type:'incrementAsync',
+  	amount:10
+})
+```
+
+
+
+购物车示例,涉及到**调用异步API和分发多重mutation**:
+
+```js
+actions: {
+    checkout ({commit,state},products) {
+        //把当前购物车的物品备份起来
+      const savedCartItems = [...state.cart.added]
+      // 发出结账请求,然后清空购物车
+      commit(types.CHECKOUT_REQUEST)
+      // 购物API接受一个成功回调和一个失败回调 ==>再去触发mutations 改变状态
+      shop.buyProducts(
+        products,
+        //成功操作
+        ()=> commit(types.CHECKOUT_SUCCESS),
+        //失败操作
+        ()=> commit(types.CHECKOUT_FAILURE,savedCartItems)
+      )
+    }
+}
+```
+
+
+
+一系列的异步操作,最终都会通过提交mutation来记录action产生的副作用(状态变更).
+
+
+
+##### 组合Action
+
+Action 通常是异步的,那么怎么知道Action什么时候结束?如何才能组合多个action,以处理更复杂的异步流程?
+
+首先,在`stopre.dispatch`中可以处理被触发的action的处理函数返回的Promise,并且`store.dispatch`仍旧返回Promise:
+
+```js
+actions:{
+    actionA({ commit }) {
+		return new Promise((resolve,reject)=>{
+          setTimeout(()=>{
+              commit('someMutation')
+              resolve()
+        	},1000)
+        })
+    }
+}
+```
+
+现在可以使用promise
+
+```js
+store.dispatch('actionA').then(()=>{
+    //....
+})
+```
+
+
+
+在另一个action中也可以:
+
+```js
+actions :{
+    //...
+  	actionB({ dispatch, commit }){
+        return dispatch('actionA').then(()=>{
+            commit('someOtherMutation')
+        })
+    }
+}
+```
+
+
+
+可以利用[async/await](https://tc39.github.io/ecmascript-asyncawait/)新特性,可以组合action:
+
+```js
+//假设 getData() 和getOtherData()返回的是promise
+
+actions: {
+  async actionA ({ commit }) {
+      commit('gotData' , await getData())
+  },
+  async actionB ({dispatch,commit}){
+      await dispatch('actionA')//等待actionA完成
+      commit('gotOtherData', await getOhterData())
+  }
+}
+```
+
+> 一个 `store.dispatch` 在不同模块中可以触发多个 action 函数。在这种情况下，只有当所有触发函数完成后，返回的 Promise 才会执行。
+
+
+
+自己的理解:
+
+因为需要在 devTools追踪到状态的变化,而在mutation中,执行异步的话,当mutation完成时,异步可能还没完成,这时候,就无法追踪到状态的变化了.
+
+这时需要Action,因为在Aciton中,等于完成异步操作后,再进行一个mutation,再进行状态的变化,使状态的变化是处于可追踪的状态.
+
+
+
+`store.dispatch`==>进行异步操作==>最后在action中触发`commit`(触发mutation进行状态变更)==>使devTools可跟踪到状态的变化
+
+
+
+#### Module
+
+由于使用的是单一状态树,应用的所有状态会集中到一个比较大的对象,当应用变得非常复杂时,store对象就有可能变得相当臃肿.
+
+为了解决这个问题,需要将store分割成**模块( module )**.每个模块拥有自己的state,mutation,action,getter甚至是嵌套的字母快---从上往下进行同样方式进行分割:
+
+```js
+const moduleA = {
+  state:{...},
+  mutations:{...},
+  actions:{...},
+  getters:{...}
+}
+
+const moduleB={
+  state:{...},
+  mutations:{...},
+  actions:{...},
+  getters:{...}
+}
+
+const store = new Vuex.Store({
+  modules:{
+           a:moduleA,
+           b:moduleB
+          }       
+})
+store.state.a // -> moduleA 的状态
+store.state.b // -> moduleB 的状态
+```
+
+
+
+##### 模块的局部状态
+
+对于模块内部的mutation和getter,接收第一个参数是**模块的局部状态对象**
+
+```js
+const moduleA = {
+  state: { count: 0 },
+  mutations: {
+    increment(state) {
+      //这里的'state'是局部模块局部的状态--->就是moduleA.state
+      state.count++;
+    }
+  },
+  getters: {
+    doubleCount(state) {
+      return state.count * 2;
+    }
+  }
+};
+```
+
+对于模块内部的action,局部状态通过`context.state`暴露出来,根节点状态则为`context.rootState`:
+
+```js
+const moduleA = {
+  // ...
+  getters: {
+    //第三个参数为根节点的状态
+    sumWithRootCount(state, getters, rootState) {
+      return state.count + rootState.count;
+    }
+  }
+};
+```
+
+对于模块内部的 getter，根节点状态会作为第三个参数暴露出来：
+
+```js
+const moduleA = {
+  // ...
+  getters: {
+    sumWithRootCount (state, getters, rootState) {
+      return state.count + rootState.count
+    }
+  }
+}
+```
+
+
+
+##### 命名空间
+
+默认情况下,模块内部的action,mutation和getter是注册在**全局命名空间**的--这样使得多个模块能够对同一mutation或者action作出相应.
+
+如果希望模块具有更高的封装度和复用性,可以通过添加`namespaced:true`的方式使其成为命名空间.当模块注册后,它的所有getter,action及mutation都会自动根据模块注册的路径调整命名:
+
+```js
+const store = new Vuex.Store({
+  modules: {
+    account: {
+      namespaced: true,
+
+      //模块内容(module,assets)
+      state: {
+        /* some code */
+      }, //模块内状态已经是嵌套的,使用`namespaced`属性不会对其产生印象
+      getters: {
+        isAdmin() {
+          /*some code*/
+        } //-> getters['account/isAdmin']
+      },
+      actions: {
+        login() {
+          /* some code */
+        } //-> dispatch('account/login')
+      },
+      mutations: {
+        login() {
+          /* some code */
+        } //-> commit('account/login')
+      },
+
+      //嵌套模块
+      modules: {
+        // 继承父模块的命名空间
+        myPage: {
+          state: {
+            /* some code */
+          },
+          getters: {
+            profile() {
+              /* some code */
+            } // -> getters['account/profile']
+          }
+        },
+
+        // 进一步嵌套命名空间
+        posts: {
+          //使用命名空间
+          namespaced: true,
+
+          state: {
+            /* some code */
+          },
+          getters: {
+            popular() {
+              /* some code */
+            } // -> getters['account/posts/popular']
+          }
+        }
+      }
+    }
+  }
+});
+```
+
+
+
+##### 在命名空间模块内访问全局内容（Global Assets）
+
+想要使用全局的state和getter,`rootState`和`rootGetter`会作为第三和第四参数传入getter,也可以通过`context`对象的属性传入action.
+
+若需要在全局命名空间内分发action或提交mutation,将`{ root:true }`作为第三参数传给`dispatch`或`commit`(就是传入这个属性以访问根dispatch或commit)
+
+```js
+ modules : {
+  foo: {
+    namespaced: true,
+
+    getters: {
+      // 在这个模块的getter中,getters被局部化了
+      // 可以使用getter的第四个参数来调用`rootGetters`
+      someGetter(state, getters, rootState, rootGetters) {
+        getters.someOtherGetter; // -> 'foo/someOtherGetter' 访问局部
+        rootGetters.someOtherGetter; // -> 'someOtherGetter' 访问根节点
+      },
+      someOtherGetter: state => {
+        /* some code */
+      }
+    },
+
+    actions: {
+      // 在这个模块中, dispatch 和commit 也被局部化了
+      // 可以接受{root:true} 属性作为第三个属性,以便用来访问根的dispatch或commit
+      someAction({ dispatch, commit, getters, rootGetters }) {
+        getters.someGetter; // -> 'foo/someGetter'
+        rootGetters.someGetter; // -> 'someGetter'
+
+        dispatch('someOtherAction'); // -> 'foo/someOtherAction'
+        dispatch('someOtherAction', null, { root: true }); // -> 'someOtherAction' 第三个参数 以便用来访问根的dispatch
+
+        commit('someMutation'); // -> 'foo/someMutation'
+        commit('someMutation', null, { root: true }); // -> 'someMutation'第三个参数 以便用来访问根的commit
+      }
+    },
+    someOtherAction (ctx, payload) { /*some code*/ }
+  }
+};
+```
+
+
+
+##### 带命名空间的绑定函数
+
+使用`mapState`,`mapGetters`, `mapActions` 和 `mapMutations`函数来绑定命名空间模块时比较繁琐,
+
+```js
+computed: {
+  ...mapState({
+    a: state => state.some.nested.module.a,
+    b: state => state.some.nested.module.b
+  })
+},
+methods: {
+  ...mapActions([
+    'some/nested/module/foo',
+    'some/nested/module/bar'
+  ])
+}
+```
+
+对于这种情况,可以将namespaced的名称字符串作为第一个参数传递给函数,这样做所有绑定都会自动将该模块作为上下文.
+
+```js
+computed: {
+  ...mapState('some/nested/module', {
+    a: state => state.a,
+    b: state => state.b
+  })
+},
+methods: {
+  ...mapActions('some/nested/module', [
+    'foo',
+    'bar'
+  ])
+}
+```
+
+还可以使用`createNamespacedHelpers`创建基于某个命名空间辅助函数.它返回一个对象,对象里有新的绑定在给定命名空间值上的组件绑定辅助函数:
+
+```js
+import { createNamespacedHelpers } from 'vuex';
+
+const { mapState, mapActions } = createNamespacedHelpers('some/nested/module');
+
+export default {
+  computed: {
+    // 在some/nested/module中查找
+    ...mapState({
+      a: state => state.a,
+      b: state => state.b
+    })
+  },
+  methods: {
+    // 在 `some/nested/module` 中查找
+    ...mapActions(['foo', 'bar'])
+  }
+};
+```
+
+
+
+##### 给插件开发者的注意事项
+
+如果你开发的[插件（Plugin）](https://vuex.vuejs.org/zh-cn/plugins.html)提供了模块并允许用户将其添加到 Vuex store，可能需要考虑模块的空间名称问题。对于这种情况，你可以通过插件的参数对象来允许用户指定空间名称：
+
+```js
+// 通过插件的参数对象得到空间名称
+// 然后返回 Vuex 插件函数
+export function createPlugin (options = {}) {
+  return function (store) {
+    // 把空间名字添加到插件模块的类型（type）中去
+    const namespace = options.namespace || ''
+    store.dispatch(namespace + 'pluginAction')
+  }
+}
+```
+
+
+
+##### 模块动态注册
+
+在store创建**之后**,可以使用`store.registerModule`方法注册模块:
+
+```js
+//注册模块 mymodule
+store.registerModule('myModule', {
+  //...
+});
+
+//注册嵌套模块 nested/myModule
+store.registerModule(['nested', 'myModule'], {
+  //...
+});
+
+```
+
+之后就可以通过 `store.state.myModule` 和 `store.state.nested.myModule` 访问模块的状态。
+
+模块动态注册功能使得其他 Vue 插件可以通过在 store 中附加新模块的方式来使用 Vuex 管理状态。例如，[`vuex-router-sync`](https://github.com/vuejs/vuex-router-sync) 插件就是通过动态注册模块将 vue-router 和 vuex 结合在一起，实现应用的路由状态管理。
+
+你也可以使用 `store.unregisterModule(moduleName)` 来动态卸载模块。注意，你不能使用此方法卸载静态模块（即创建 store 时声明的模块）。
+
+
+
+##### 模块重用
+
+需要将一个模块多次复用,或者多个实例
+
+- 创建多个 store，他们公用同一个模块 (例如当 `runInNewContext` 选项是 `false` 或 `'once'` 时，为了[在服务端渲染中避免有状态的单例](https://ssr.vuejs.org/en/structure.html#avoid-stateful-singletons))
+- 在一个 store 中多次注册同一个模块
+
+如果使用一个纯对象来声明模块的状态,那么在这个状态对象会通过引用被共享,导致状态对象被修改时store或模块间数据互相污染的问题.
+
+实际上这和 Vue 组件内的 `data` 是同样的问题。因此解决办法也是相同的——使用一个函数来声明模块状态(return一个对象)（仅 2.3.0+ 支持）：
+
+```js
+const MyReusableModule = {
+  state () {
+    return {
+      foo: 'bar'
+    }
+  },
+  // mutation, action 和 getter 等等...
+}
+```
+
+
+
+在module中,如果一个模块要多次复用的话,那么他的state啊mutation啊都是公用的,(因为是引用类型),那么为了避免这种状况,就每一次return一个新的对象,在内存中开辟一个新的空间
