@@ -1084,3 +1084,519 @@ const MyReusableModule = {
 
 
 在module中,如果一个模块要多次复用的话,那么他的state啊mutation啊都是公用的,(因为是引用类型),那么为了避免这种状况,就每一次return一个新的对象,在内存中开辟一个新的空间
+
+
+
+### 项目结构
+
+
+
+Vuex并不限制你的代码结构.但是,规定了一些需要遵守的规则:
+
+1. 应用层级的状态应该集中到单个store对象中.
+2. 提交mutation是更改状态的唯一方法,并且这个过程是同步的.
+3. 异步逻辑都应该封装到action里面.
+
+对应大型应用,需要把Vuex相关代码分割到模块中。
+
+```shell
+├── index.html
+├── main.js
+├── api
+│   └── ... # 抽取出API请求
+├── components
+│   ├── App.vue
+│   └── ...
+└── store
+    ├── index.js          # 我们组装模块并导出 store 的地方
+    ├── actions.js        # 根级别的 action
+    ├── mutations.js      # 根级别的 mutation
+    └── modules
+        ├── cart.js       # 购物车模块
+        └── products.js   # 产品模块
+```
+
+请参考[购物车示例](https://github.com/vuejs/vuex/tree/dev/examples/shopping-cart)。
+
+
+
+### 插件
+
+Vuex的store接受`plugins`选项,这个选项暴露出每次mutation的钩子.Vuex插件就是一个函数,它接收store作为唯一参数:
+
+```js
+const myPlugin = store => {
+    //当store 初始化后调用
+  store.subscribe((mutation,state)=>{
+      //每次mutation之后调用
+      // mutation 的格式为 { type,payload }
+      // {type为名字,payload为载荷(参数)}
+  })
+}
+```
+
+使用方法:
+
+```js
+const store = new Vuex.Store({
+    //...
+  	plugins:[myPlugin]
+})
+```
+
+
+
+####  在插件中提交Mutation
+
+在插件中不允许直接修改状态--类似于组件,只能通过提交mutation来触发变化.
+
+提交mutation,插件可以用来同步数据到store.例如,同步websocket数据源到store
+
+```js
+export default function createWebSocketPlugin(socket) {
+  return store => {
+    socket.on('data', data => {
+      store.commit('receiveData', data);
+    });
+    store.subscrible(mutation => {
+      // 每次mutation后触发
+      // 触发mutation的名字为update_data,就执行socket.emit
+      if (mutation.type === 'UPDATE_DATA') {
+        socket.emit('update', mutation.playload);
+      }
+    });
+  };
+}
+
+const plugin = createWebSocketPlugin(socket);
+
+const store = new Vuex.Store({
+  state,
+  mutations,
+  plugins: [plugin]
+});
+```
+
+
+
+#### 生成State快照
+
+有时候,需要比较改变前后的状态,这时候就需要对状态对象进行深拷贝:
+
+```js
+const myPluginWithSnapshot = store => {
+  let prevState = _.cloneDeep(store.state);
+  store.subscribe((mutation, state) => {
+    let nextState = _.cloneDeep(state);
+
+    // 在这里比较状态前后的变化
+
+    //保存这一次的状态,用于下一次的比较
+    prevState = nextState;
+  });
+};
+```
+
+**生成状态快照的插件应该只在开发阶段使用**,使用webpack或Browserify,让构建工具帮我们处理:
+
+```js
+const store = new Vuex.Store({
+  // ...
+  //判断这个字段是否为production 是的话就拓展插件,否则给个空
+  plugins: process.env.NODE_ENV !== 'production'
+    ? [myPluginWithSnapshot]
+    : []
+})
+```
+
+上面插件会默认启用。在发布阶段，你需要使用 webpack 的 [DefinePlugin](https://webpack.github.io/docs/list-of-plugins.html#defineplugin) 或者是 Browserify 的 [envify](https://github.com/hughsk/envify)使 `process.env.NODE_ENV !== 'production'` 为 `false`。
+
+
+
+#### 内置Logger插件
+
+> 如果正在使用 [vue-devtools](https://github.com/vuejs/vue-devtools)，则可能不需要此插件。
+
+Vuex 自带一个日志插件用于一般的调试:
+
+```js
+import createLogger from 'vuex/dist/logger'
+
+const store = new Vuex.Store({
+    plugins:[createLogger()]
+})
+```
+
+`createLogger`函数有几个配置项:
+
+```js
+const logger = createLogger({
+  collapsed:false,//自动展开记录的mutation
+  filter(mutation,stateBefore,stateAfter){
+      // 若mutation 需要被记录 , 就让它返回true即可
+    //mutation和上面插件一样 是个{type,payload}对象
+    return mutation.type !== 'aBlacklistedMutation'
+  },
+  transformer(state){
+     //在开始记录之前转换状态
+     //例如,只返回指定的子树
+    return state.subTree
+  },
+  mutationTransformer(mutation){
+    // mutation按照{type,payload}格式记录
+    // 我们可以按任意方式格式化
+    return mutation.type
+  },
+  logger:console //自定义console实现,默认为console
+})
+```
+
+日志插件还可以通过`<script>`标签引入,它会提供全局方法`createVuexLogger`.
+
+ logger插件会生成状态快照,仅在开发环境使用
+
+
+
+### 严格模式
+
+在创建store的时候传入`strict:true`:
+
+```js
+const store = new Vuex.Store({
+   //...
+  strict:true
+})
+```
+
+在严格模式下,无论何时发生了状态变更且不是由mutation函数引起的,将会抛出错误,这能保证所有的状态变更都能被调试工具跟踪到。
+
+
+
+#### 开发环境与发布环境
+
+**不要在发布环境下启用严格模式！**严格模式会深度监测状态树来检测不合规的状态变更——请确保在发布环境下关闭严格模式，以避免性能损失。
+
+与插件一样，可以让构建工具处理：
+
+```js
+const store = new Vuex.Store({
+  // ...
+  strict: process.env.NODE_ENV !== 'production'
+})
+```
+
+
+
+### 表单处理
+
+当在严格模式中使用Vuex时,在属于Vuex的state 上使用`v-model`(双向绑定)会比较棘手(因为严格模式下若非通过mutation提交状态变化的话,会抛出错误):
+
+```html
+<input v-model="obj.message">
+```
+
+假设这里的`obj`是在计算属性中返回的一个属于Vuex store的对象,在用户输入时,`v-model`会试图直接修改`obj.message`,在严格模式中，由于这个修改不是在 mutation 函数中执行的, 这里会抛出一个错误。
+
+
+
+用`vuex的思维`去解决问题的方法是:给`<input>`中绑定value,然后侦听`input`或者`change`事件,在事件回调中调用action:
+
+```html
+<input :value="message" @input="updateMessage">
+```
+
+```js
+//...
+computed:{
+    ...mapState({
+        message:state=>state.obj.message
+    })
+},
+methods: {
+    updateMessage(e){
+        this.$store.commit('updateMessage',e.target.value)
+    }
+}
+```
+
+Vuex.Store中的mutation函数:
+
+```js
+//....
+mutations:{
+    updateMessage(state,message){
+      state.obj.message = message
+	}
+}
+```
+
+这样做比简单使用`v-model`+局部状态啰嗦的多,并且也会损失一些`v-model`中很有用的特性
+
+#### 双向绑定计算属性
+
+使用setter的双向绑定计算属性
+
+```html
+<input v-model="message">
+```
+
+```js
+//...
+computed:{
+    message:{
+        get() {
+            return this.$store.state.obj.message
+        },
+        set(value){
+            this.$store.commit('updateMessage',value)
+        }
+    }
+}
+```
+
+
+
+### 测试
+
+针对Vuex 中的 mutation 和 action 进行单元测试.
+
+
+
+#### 测试Mutation
+
+Mutation很容易被测试,因为它们仅仅是一些完全依赖参数的函数(并且是同步的),
+
+小技巧: 在`store.js`中定义了mutation,并且使用ES2015模块功能默认输出了Vuex.Store的实例,可以给mutation一个变量名,然后将它输出:
+
+```js
+const state = {/*some code*/}
+
+// mutation 作为命名输出对象
+export const mutations = {/*some code*/}
+
+export default new Vuex.Store({
+    state,
+  	mutations
+})
+```
+
+
+
+下面是用 Mocha (测试框架)+ Chai(断言库) 测试一个 mutation 的例子
+
+```js
+//muatations.js
+export const mutations = {
+  increment: state => state.count++
+};
+
+//mutations.spec.js (加上.spec是规格,用于测试)
+import { expect } from 'chai';
+import { mutations } from './store';
+
+//解构 mutations
+const { increment } = mutations;
+
+describe('mutations', () => {
+  it('INCREMENT', () => {
+    //模拟状态
+    const state = { count: 0 };
+    //应用mutation
+    increment(state);
+    //断言结果
+    expect(state.count).to.equal(1);
+  });
+});
+```
+
+
+
+#### 测试Action
+
+Action是异步的,所以有可能调用外部api,当测试action的时候,需要增加一个mocking服务层--例如,我们可以把API调用抽象成服务,然后在测试文件中用mock服务回应API调用.为了便于解决mock依赖,可以用webapck和 [inject-loader](https://github.com/plasticine/inject-loader) 打包测试文件。
+
+
+
+```js
+// actions.js
+import shop from '../api/shop';
+
+export const getAllProducts = ({ commit }) => {
+  commit('REQUEST_PRODUCTS');
+  shop.getProducts(products => {
+    commit('RECEIVE_PRODUCTS', products);
+  });
+};
+
+// actions.spec.js
+
+// 使用require 语法处理内联 loaders.
+// inject-loader 返回一个允许注入mock 依赖的模块工厂
+
+//使用mocks创建模块
+const actions = actionsInjector({
+  '../api/shop': {
+    getProducts(cb) {
+      setTimeout(() => {
+        cb([
+          /* mocked response */
+        ]);
+      }, 100);
+    }
+  }
+});
+
+//  用指定的 mutations 测试 action 的辅助函数
+const testAction = (action, args, state, expectedMutations, done) => {
+  let count = 0;
+
+  //模拟提交
+  const commit = (type, payload) => {
+    const mutation = expectedMutations[count];
+
+    try {
+      expect(mutation.type).to.qual(type);
+      if (payload) {
+        expect(mutation.payload).to.deep.equal(payload);
+      }
+    } catch (error) {
+      done(error);
+    }
+
+    count++;
+    if (count => expectedMutations.length) {
+      done();
+    }
+  };
+
+  // 用模拟的store和参数调用action
+  action({ commit, state }, ...args);
+
+  //检查是否没有mutation被dispatch
+  if (expectedMutations.length === 0) {
+    expect(count).to.equal(0);
+    done();
+  }
+};
+
+describe('actions', () => {
+  it('getAllProducts', done => {
+    testAction(
+      actions.getAllProducts,
+      [],
+      {},
+      [
+        { type: 'REQUEST_PRODUCTS' },
+        {
+          type: 'RECEIVE_PRODUCTS',
+          payload: {
+            /* mocked response */
+          }
+        }
+      ],
+      done
+    );
+  });
+});
+```
+
+
+
+#### 执行测试
+
+如果mutation和action编写正确,经过合理地mocking处理之后,这些测试应该不依赖于任何浏览器API,因此可以直接用webpack打包这些测试文件然后在Node中执行,换种方式,也可以用`MOCHA-LOADER`或`KARMA+KARMA-WEBPACK`在真实浏览器环境中进行测试.
+
+
+
+##### 在node中执行测试
+
+创建以下 webpack 配置（配置好 [`.babelrc`](https://babeljs.io/docs/usage/babelrc/)）:
+
+```js
+// webpack.config.js
+module.exports = {
+  entry: './test.js',
+  output: {
+    path: __dirname,
+    filename: 'test-bundle.js'
+  },
+  module: {
+    loaders: [
+      {
+        test: /\.js$/,
+        loader: 'babel-loader',
+        exclude: /node_modules/
+      }
+    ]
+  }
+}
+```
+
+```shell
+webpack
+mocha test-bundle.js
+```
+
+
+
+##### 在浏览器中测试
+
+1. 安装`mocha-loader`
+2. 把上面的配置中入口`entry`改成`mocha-loader!babel-loader!./test.js`
+3. 用以上配置`webpack-dev-server`
+4. 访问`localhost:8080/webpack-dev-server/test-bundle`
+
+
+
+##### 使用 Karma + karma-webpack 在浏览器中执行测试
+
+详见 [vue-loader documentation](https://vuejs.github.io/vue-loader/workflow/testing.html)。
+
+
+
+### 热重载
+
+使用 webpack 的 [Hot Module Replacement API](https://doc.webpack-china.org/concepts/hot-module-replacement/)，Vuex 支持在开发过程中热重载 mutation、module、action 和 getter。你也可以在 Browserify 中使用 [browserify-hmr](https://github.com/AgentME/browserify-hmr/) 插件。
+
+
+
+对于 mutation 和模块，你需要使用 `store.hotUpdate()` 方法：
+
+```js
+// store.js
+import Vue from 'vue'
+import Vuex from 'vuex'
+import mutations from './mutations'
+import moduleA from './modules/a'
+
+Vue.use(Vuex)
+
+const state = { ... }
+
+const store = new Vuex.Store({
+  state,
+  mutations,
+  modules: {
+    a: moduleA
+  }
+})
+
+if (module.hot) {
+  // 使 action 和 mutation 成为可热重载模块
+  module.hot.accept(['./mutations', './modules/a'], () => {
+    // 获取更新后的模块
+    // 因为 babel 6 的模块编译格式问题，这里需要加上 `.default`
+    const newMutations = require('./mutations').default
+    const newModuleA = require('./modules/a').default
+    // 加载新模块
+    store.hotUpdate({
+      mutations: newMutations,
+      modules: {
+        a: newModuleA
+      }
+    })
+  })
+}
+```
+
+参考热重载示例 [counter-hot](https://github.com/vuejs/vuex/tree/dev/examples/counter-hot)。
