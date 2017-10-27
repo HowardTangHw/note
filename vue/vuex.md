@@ -4,13 +4,13 @@
 
 
 
-## Vuex是什么?
+### Vuex是什么?
 
 Vuex 是一个专为Vue.js应用程序开发的**状态管理模式**,采用集中式存储管理应用的所有组件状态,并以相应的规则保证状态以一种可预测的方式发生变化.Vuex也集成到Vue官方调试工具[vue-devtool](https://github.com/vuejs/vue-devtools)中,提供了诸如零配置的 time-travel 调试、状态快照导入导出等高级调试功能。
 
 
 
-### 什么是"状态管理模式"?
+#### 什么是"状态管理模式"?
 
 一个简单的vue技术应用就包含了--state,view,actions
 
@@ -80,7 +80,7 @@ Vuex是专门为vue.js设计的状态管理库,利用vue.js的细粒度数据响
 
 
 
-### 什么情况下应该使用Vuex?
+#### 什么情况下应该使用Vuex?
 
 Vuex 可以帮助我们管理共享状态,但也附带了更多的概念和框架.这需要对短期和长期效益进行权衡.
 
@@ -1600,3 +1600,233 @@ if (module.hot) {
 ```
 
 参考热重载示例 [counter-hot](https://github.com/vuejs/vuex/tree/dev/examples/counter-hot)。
+
+
+
+### API
+
+#### Vuex.Store
+
+```js
+import Vuex from 'vuex'
+
+const store = new Vuex.Store({...opts})
+```
+
+
+
+#### Vuex.Store构造器选项
+
+
+
+- state
+
+  - 类型:`Object | Function`
+
+    Vuex store 实例的根state对象.
+
+    如果传入的是一个对象函数,其返回的对象会被用做根state,这在重用state对象,尤其是重用module来说非常有用(因为传入对象是引用类型,会导致在模块重用的时候,多个模块公用一个对象,而每次return一个对象,则是每一个模块对应一个对象)
+
+    ​
+
+- mutations
+
+  - 类型:`{[type:string]:Function}`
+
+    在store上注册mutation,第一个参数为`state`,如果定义在模块(module)中则为模块的局部状态,第二个参数为`payload`(载荷),即入参
+
+  - 提交mutations是唯一改变状态的方法
+
+  - mutations是同步的
+
+  ​
+
+- actions
+
+  - 类型:`{[type:string]:Function}`
+
+    在store上注册action,处理函数总是接收`与 store 实例具有相同方法和属性的 context 对象`作为第一个参数,`payload`作为第二个参数(可选).
+
+  - `context`对象包含以下属性:
+
+    ```js
+    {
+        state,		// 等同于 store.state ,若在模块中则为局部状态
+        rootState,  // 等同于 store.state , 用于在模块中访问根节点状态,只存在于模块中
+        commit,		// 等同于 store.commit
+        dispatch,	// 等同于 store.dispatch
+        getters		// 等同于 sotre.getters
+    }
+    ```
+
+
+
+- getters(类似于计算属性)
+
+  - 类型:`{[key:string]:Function}`
+
+  在store上注册getter,getter方法接受以下参数:
+
+  ```js
+  state,		// 如果在模块中定义,则为模块的局部状态
+  getters,	// 等同于store.getters
+  ```
+
+  当定义在一个模块里会特别一些
+
+  ```js
+  state,			// 在模块中定义,则为模块的局部状态
+  getters,		// 等同于 store.getters
+  rootState		// 等同于 store.state
+  rootGetters		// 所有 getters
+  ```
+
+  注册的 getter 暴露为 `store.getters`
+
+
+
+- modules
+
+  - 类型`Object`
+
+    包含了子模块的对象,会被合并到store
+
+    ```js
+    {
+      key: {
+        state,
+        namespaced?,
+        mutations,
+        actions?,
+        getters?,
+        modules?
+      },
+      //...
+    }
+    ```
+
+    ​
+
+- plugins
+
+  - 类型:`Array<Function>`
+
+  一个数组,包含应用在store上的插件方法,这些插件直接接收store作为唯一参数,可以监听mutation(用于外部的数据持久化,记录或调试):`subscribe`或者提交mutation(用于内部数据,例如webscocket 或 某些观察者 )
+
+  ​
+
+- strcit
+
+  - 类型`Boolean`
+  - 默认值:`false`
+
+  使用Vuex store进入严格模式,在严格模式下,任何mutation处理函数以外修改Vuex state 都会抛出错误.
+
+
+
+#### Vuex.Store实例属性
+
+- **state**
+
+  - 类型: `Object`
+
+    根状态，只读。
+
+- **getters**
+
+  - 类型: `Object`
+
+    暴露出注册的 getter，只读。
+
+
+
+#### Vuex.Store实例方法
+
+- `commit(type: string, payload?: any, options?: Object) | commit(mutation: Object, options?: Object)`
+
+  - 提交mutation.`options`里可以有`root:true`,它允许在[命名空间模块](https://vuex.vuejs.org/zh-cn/modules.html#命名空间)里提交根的 mutation.
+
+- `dispatch(type: string, payload?: any, options?: Object) | dispatch(action: Object, options?: Object)`
+
+  - 分发acton。`options`里可以有`root:true`,它允许在[命名空间模块](https://vuex.vuejs.org/zh-cn/modules.html#命名空间)里分发根的action.返回一个解析所有被触发action处理器的Promise
+
+- `replaceState(state:Object)`
+
+  - 替换store的根状态,仅用状态合并或时光旅行(time-travel)调试
+
+- `watch(getter:Function,cb:Function,options?:Object)`
+
+  - 响应式地监测一个getter方法的返回值,当值改变时调用回调函数.getter接收store的状态作为唯一参数,接收一个可选的对象参数表示 Vue的`vm.$watch`方法的参数
+  - 要停止监测,直接调用返回的处理函数
+
+- `subscribe(handler:Function)`
+
+  - 注册监听store的mutation,`handler`会在每个mutation完成后调用,接收mutation和经过mutation后的状态作为参数:
+
+    ```js
+    store.subscribe((mutation,state)=>{
+      console.log(mutation.type)
+      console.log(mutation.payload)
+    })
+    ```
+
+    - 通常用于插件。[详细介绍](https://vuex.vuejs.org/zh-cn/plugins.html)
+
+- `subscribeAction(handler:Function)`
+
+  > 2.5.0 新增
+
+  订阅store的action.`handler`会在每个action分发的时候调用并接收action描述和当前的`store`的state这两个参数:
+
+  ```js
+  store.subscribeAction(action,state) => {
+  	console.log(action.type);
+    	console.log(action.payload)
+  }
+  ```
+
+- `registerModule(path:string|Array<string>,module:Module,options?:Object)`
+
+  注册一个动态模块
+
+  `options`可以包含`preserveState:ture`以允许保留之前的 state.用于服务端渲染
+
+- `unregisterModule(path:string|Array<string>)`
+
+  卸载一个动态模块
+
+- `hotUpdate(newOptions:Object)`
+
+  热替换新的action和mutation
+
+
+
+#### 组件绑定的辅助函数
+
+- **mapState(namespace?: string, map: Array<string> | Object): Object**
+
+  为组件创建计算属性以返回 Vuex store 中的状态。[详细介绍](https://vuex.vuejs.org/zh-cn/state.html#mapstate-辅助函数)
+
+  第一个参数是可选的，可以是一个命名空间字符串。[详细介绍](https://vuex.vuejs.org/zh-cn/modules.html#带命名空间的绑定函数)
+
+- **mapGetters(namespace?: string, map: Array<string> | Object): Object**
+
+  为组件创建计算属性以返回 getter 的返回值。[详细介绍](https://vuex.vuejs.org/zh-cn/getters.html#mapgetters-辅助函数)
+
+  第一个参数是可选的，可以是一个命名空间字符串。[详细介绍](https://vuex.vuejs.org/zh-cn/modules.html#带命名空间的绑定函数)
+
+- **mapActions(namespace?: string, map: Array<string> | Object): Object**
+
+  创建组件方法分发 action。[详细介绍](https://vuex.vuejs.org/zh-cn/actions.html#在组件中分发-action)
+
+  第一个参数是可选的，可以是一个命名空间字符串。[详细介绍](https://vuex.vuejs.org/zh-cn/modules.html#带命名空间的绑定函数)
+
+- **mapMutations(namespace?: string, map: Array<string> | Object): Object**
+
+  创建组件方法提交 mutation。[详细介绍](https://vuex.vuejs.org/zh-cn/mutations.html#在组件中提交-mutation)
+
+  第一个参数是可选的，可以是一个命名空间字符串。[详细介绍](https://vuex.vuejs.org/zh-cn/modules.html#带命名空间的绑定函数)
+
+- **createNamespacedHelpers(namespace: string): Object**
+
+  创建基于命名空间的组件绑定辅助函数。其返回一个包含 `mapState`、`mapGetters`、`mapActions` 和 `mapMutations` 的对象。它们都已经绑定在了给定的命名空间上。[详细介绍](https://vuex.vuejs.org/zh-cn/modules.html#带命名空间的绑定函数)
