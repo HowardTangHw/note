@@ -2224,3 +2224,26 @@ Vue.js 允许自定义过滤器,可被用作一些常见的文本格式化。过
 #### 简单的路由
 
 [简单的路由](https://github.com/chrisvfritz/vue-2.0-simple-routing-example)
+
+
+
+### 状态管理
+
+[Vuex](https://vuex.vuejs.org/zh-cn/)
+
+
+
+### 服务端渲染
+
+---没看
+
+[SSR](https://ssr.vuejs.org/zh/)
+
+[Nuxt.js](https://nuxtjs.org/)
+
+
+
+## 内在
+
+### 深入响应式原理
+
