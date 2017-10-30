@@ -2247,3 +2247,16 @@ Vue.js 允许自定义过滤器,可被用作一些常见的文本格式化。过
 
 ### 深入响应式原理
 
+数据模型仅仅是JavaScript对象。而当修改数据模型时，视图会进行更新。这使得状态管理非常简单直接。
+
+#### 如何追踪变化
+
+当把一个普通的JavaScript对象传给Vue实例的`data`选项,Vue将遍历此对象所有的属性,并使用 [Object.defineProperty](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty) (添加/替换属性),把这些属性全部转为getter/setter, Object.defineProperty是在ES5中无法shim的特性,所以导致VUE不支持IE8以及更低版本浏览器的原因.
+
+用户看不到gette/setter,但是在内部它们让Vue追踪依赖,在属性被访问或修改时通知变化。
+
+> 浏览器控制台在打印数据对象时,getter/setter的格式并不同,所以需要在`vue-devtools`来获取更加友好的检查接口
+
+每个组件实例都有相应的**watch**实例对象,它会在组件渲染的过程中把属性记录为依赖,之后当依赖项的`setter`被调用时,会通知`watcher`重新计算,从而致使它关联的组件得以更新.
+
+![https://cn.vuejs.org/images/data.png](https://cn.vuejs.org/images/data.png)
