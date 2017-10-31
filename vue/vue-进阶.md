@@ -2260,3 +2260,115 @@ Vue.js 允许自定义过滤器,可被用作一些常见的文本格式化。过
 每个组件实例都有相应的**watch**实例对象,它会在组件渲染的过程中把属性记录为依赖,之后当依赖项的`setter`被调用时,会通知`watcher`重新计算,从而致使它关联的组件得以更新.
 
 ![https://cn.vuejs.org/images/data.png](https://cn.vuejs.org/images/data.png)
+
+#### 检测变化的注意事项
+
+受现代JavaScript 的限制(以及废弃`Object.observe`),Vue**不能检测到对象属性的添加或删除**.由于Vue会在初始化实例时对属性执行`getter/setter`转化过程,所以属性必须在`data`对象上存在才能让Vue转换它,这样才能让它试下响应的.例如:
+
+```js
+var vm = new Vue({
+  data:{
+    a:1
+  }
+})
+
+//`vm.a`是响应的
+
+vm.b=2
+//`vm.b`是非响应的
+```
+
+Vue不允许在已经创建的实例上动态添加新的根级响应式属性(root-level reactive property).然而它可以使用`Vue.set(object,key,value)`方法将响应属性添加到嵌套的对象上:
+
+```js
+Vue.set(vm.someObject,'b',2);
+```
+
+您还可以使用`vm.$set`实例方法,这也是全局`Vue.set`方法的别名
+
+```js
+this.$set(this.someObject,'b',2)
+```
+
+向已有对象上添加一些属性,例如使用`Object.assign()`或`_.extend()`方法来添加属性,但是,添加属性上的新属性不会触发更新,在这种情况下可以创建一个新的对象,让它包含原对象的属性和新的属性:
+
+```js
+// 代替`Object.assign(this.someObject,{a:1,b:2})`
+this.someObject = Object.assign({},this.someObject,{ a:1, b:2 })
+```
+
+也有一些数组相关的问题，之前已经在[列表渲染](https://cn.vuejs.org/v2/guide/list.html#注意事项)中讲过。
+
+
+
+#### 声明响应式属性
+
+由于Vue不允许动态添加根级响应式属性,所以必须在初始化实例前声明根级响应式属性,哪怕是一个空值:
+
+```js
+var vm = new Vue({
+  data:{
+    //声明message 为一个空值字符串
+    message:''
+  },
+  template:`<div>{{message}}</div>`
+})
+// 之后设置`message`
+vm.message = 'HELLO!'
+```
+
+如果在data选项中未声明`message`,Vue将警告你渲染函数在试图访问的属性不存在.
+
+这样的限制在背后是有其技术原因的,它消除了在依赖项跟踪系统中的一类边界情况,也使Vue实例在类型检测系统的帮助下运行的更高效.而且在代码可维护性方面也有一点重点考虑:`data`对象就像组件状态的概要,提前声明所有的响应式属性,可以让组件代码在以后更新阅读或其他开发人员阅读时更易于被理解
+
+
+
+####　异步更新队列
+
+Vue**异步**执行DOM更新,只要观察到数据变化,Vue将开启一个队列,并缓冲在同一事件循环中发生的所有数据改变.如果同一个watcher被多次触发,只会一次推入到队列中.这种在缓冲时去除重复数据对于避免不必要的计算和DOM操作上非常重要,然后,在下一个的事件循环`tick`中,Vue刷新队列并执行实际(已去重的)工作,Vue在内部尝试对异步队列使用原生的`Promise.then`和`MutationObserver`,如果执行环境不支持,会采用`setTimeout(fn,0)`代替.
+
+例如,当设置`vm.someData=  'new value'` ,组件不会立刻重新渲染,当刷新队列时,组件会在事件循环队列清空时的下一个`tick`更新,为了在数据变化之后等待Vue完成更新DOM,可以在数据变化之后立即使用`Vue.nextTick(callback)`.这样回调函数在DOM更新完成后就会调用.例如:
+
+```html
+<div id="example">
+  {{message}}
+</div>
+```
+
+```js
+var vm = new Vue({
+  el:"#example",
+  data: {
+    message:'123'
+  }
+})
+vm.message = 'new message' //更改数据
+// vm.$el.textContent  vm.$el-> node,当前要执行修改的node  textContent -> node及子代的文本
+vm.$el.textContent === 'new message' // false 因为还没触发
+Vue.nextTic(function(){
+  vm.$el.textContent === 'new message' //true
+})
+```
+
+在组件内使用`vm.$nextTick()`实例方法特别方便,因为它不需要全局的`Vue `,并且回调函数中的`this`将自动绑定到当前的Vue实例上:
+
+```js
+Vue.component('example',{
+  template:'<span>{{message}}</span>',
+  data:function(){
+    return {
+      message:'没有更新'
+    }
+  },
+  methods:{
+    updateMessage:function(){
+      this.message = '更新完成'
+      console.log(this.$el.textContent) //=>没有更新
+      this.$nextTick(function(){
+        console.log(this.$el.textContent) // =>更新完成
+      })
+    }
+  }
+})
+```
+
