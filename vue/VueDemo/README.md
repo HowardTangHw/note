@@ -1,5 +1,9 @@
 # VueDemo
 
+一个Vue练习..
+
+
+
 作者:[ShuiRong Lin](https://github.com/shuiRong/)
 
 github:https://github.com/shuiRong/VueCnodeJS
