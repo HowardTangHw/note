@@ -4,7 +4,7 @@
 /**
  * @param {number[]} bits
  * @return {boolean}
- */ 
+ */
 
 /**
  * 如果是1,则加两位,因为1后面肯定是1或者是0的
@@ -18,4 +18,13 @@ var isOneBitCharacter = function(bits) {
     i += bits[i] + 1;
   }
   return i === len;
+};
+var isOneBitCharacter = function(bits) {
+  let len = bits.length;
+  if (len == 1) return bits[0] === 0;
+  let flag = len % 2 === 0;
+  if (flag) {
+    return !bits[len - 2];
+  }
+  return bits[len - 3] === 1;
 };
