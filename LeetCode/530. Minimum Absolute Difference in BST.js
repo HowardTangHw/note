@@ -1,4 +1,8 @@
 /**
+ * link:https://leetcode.com/problems/minimum-absolute-difference-in-bst/
+ */
+
+/**
  * Definition for a binary tree node.
  * function TreeNode(val) {
  *     this.val = val;
@@ -32,21 +36,22 @@ var getMinimumDifference = function(root) {
 };
 
 // 方法2
+//这种方法比较容易理解,把所有节点都存进一个数组,然后排序,前减后,算出最低的差距
 var getMinimumDifference = function(root) {
   let diff = Infinity;
   let res = [];
 
   var dfs = function(root) {
     if (root == null) return;
-    res.push(root.val);
+    if (root.val != null) res.push(root.val);
     if (root.left) dfs(root.left);
     if (root.right) dfs(root.right);
   };
   dfs(root);
-
-  res.sort();
-  console.log(res);
-  for (var i in res) {
+  res.sort(function(a, b) {
+    return a - b;
+  });
+  for (var i = 1; i < res.length; i++) {
     diff = Math.min(diff, res[i] - res[i - 1]);
     console.log(diff);
   }
