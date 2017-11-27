@@ -165,3 +165,14 @@ var modelMatcher = function(attrs) {
 };
 ```
 
+
+
+## Backbone.Events
+
+Backbone的Events实际上就是一个观察者模式(发布订阅模式)的实现,并且巧妙的是,还可以作为mixin混入到自己写的object中
+
+
+
+backbone的Events是一个对象,其中的方法(on\listenTo\off\stopListening\once\listenToOnce\trigger)都是对象方法.
+
+总体上,backbone的Events实现了监听/触发/解除对自己对象本身的事件,也可以让一个对象监听/解除监听另一个对象的事件
