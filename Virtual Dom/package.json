@@ -13,7 +13,9 @@
     "type": "git",
     "url": "git+https://github.com/livoras/simple-virtual-dom.git"
   },
-  "keywords": ["virtual-dom"],
+  "keywords": [
+    "virtual-dom"
+  ],
   "author": "Livoras",
   "license": "MIT",
   "bugs": {

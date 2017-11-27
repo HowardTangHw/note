@@ -103,7 +103,7 @@ var element = {
 
 
 
-Virtual Dom 本质上 就是在JS和DOM之间做了一个缓存,就好像CPU 内存 硬盘之间的关系,CPU太快,硬盘太满了,这时候我们就需要内存作为缓存,利用JS(CPU)操作Virtual Dom(内存),最后再把变更写入到硬盘中(DOM)
+Virtual Dom 本质上 就是在JS和DOM之间做了一个缓存,就好像CPU 内存 硬盘之间的关系,CPU太快,硬盘太慢了,这时候我们就需要内存作为缓存,利用JS(CPU)操作Virtual Dom(内存),最后再把变更写入到硬盘中(DOM)
 
 > ps:其实还是因为DOM的标准过于庞大,一点点改动都会很慢,所以才曲线救国,换个SSD会不会好点?
 
@@ -112,4 +112,70 @@ Virtual Dom 本质上 就是在JS和DOM之间做了一个缓存,就好像CPU 内
 ## 算法实现
 
 ### 步骤一: 用JS对象模拟DOM树
+
+用JS来表示一个DOM节点是比较简单的事情,只需要记录节点类型,属性还有子节点:
+
+element.js
+
+```js
+function Element(tagName, props, children) {
+  this.tagName = tagName;
+  this.props = props;
+  this.children = children;
+}
+
+module.exports = function(tagName, props, children) {
+  return new Element(tagName, props, children);
+};
+```
+
+例如上面的 DOM 结构就可以简单的表示：
+
+```js
+var el = require('./element')
+
+var ul = el('ul', {id: 'list'}, [
+  el('li', {class: 'item'}, ['Item 1']),
+  el('li', {class: 'item'}, ['Item 2']),
+  el('li', {class: 'item'}, ['Item 3'])
+])
+```
+
+这只是一个JavaScript对象表示的DOM结构,页面上并没有这个结构,那么我们就需要把这个结构渲染在页面上
+
+```js
+Element.prototype.render = function() {
+  var el = document.createElement(this.tagName);
+  var props = this.props;
+  for (var propName in props) {
+    var propValue = props[propName];
+    el.setAttribute(propName, propValue);
+  }
+  var children = this.children || [];
+
+  children.forEach(function(child) {
+    //如果是虚拟DOM 则递归执行,如果只是字符串 只构建文本节点
+    var childeEl = child instanceof Element ? child.render() : document.createTextNode(child);
+    el.appendChild(childeEl);
+  });
+  return el;
+};
+```
+
+`render`方法会根据`tagName`构建一个真正的DOM节点,然后设置这个节点的属性,最后递归自身的子节点,
+
+```js
+var ulRoot = ul.render()
+document.body.appendChild(ulRoot)
+```
+
+上面的`ulRoot`是真正的DOM节点，把它塞入文档中，这样`body`里面就有了真正的`<ul>`的DOM结构：
+
+```html
+<ul id='list'>
+  <li class='item'>Item 1</li>
+  <li class='item'>Item 2</li>
+  <li class='item'>Item 3</li>
+</ul>
+```
 

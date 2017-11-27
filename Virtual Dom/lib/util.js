@@ -54,5 +54,15 @@ _.setAttr = function setAttr(node, key, value) {
     case 'value':
       var tagName = node.tagName || '';
       tagName = tagName.toLowerCase();
+      if (tagName === 'input' || tagName === 'textarea') {
+        node.value = value;
+      } else {
+        // if it is not a input or textarea, use `setAttribute` to set
+        ndoe.setAttribute(key, value);
+      }
+      break;
+    default:
+      ndoe.setAttribute(key, value);
+      break;
   }
 };
