@@ -23,29 +23,49 @@ function Element(tagName, props, children) {
     children = props;
     props = {};
   }
-
+  // 处理入参
   this.tagName = tagName;
   this.props = props || {};
   this.children = children || [];
+  this.key = props ? props.key : void 0;
+
+  // count 用来记录层级? 用于之后的diff?
+  var count = 0;
+
+  _.each(this.children, function(child, i) {
+    // 如果child属于Element类(每一个Element类都会统计过层级)
+    if (child instanceof Element) {
+      count += child.count;
+    } else {
+      // 这一步的意义?
+      children[i] = '' + child;
+    }
+    count++;
+  });
+
+  this.count = count;
 }
+
+/**
+ * Render the hold element tree.
+ */
 
 Element.prototype.render = function() {
   var el = document.createElement(this.tagName);
   var props = this.props;
   for (var propName in props) {
     var propValue = props[propName];
-    el.setAttribute(propName, propValue);
+    // 处理多种情况,如果分清props是style value 还是普通的自定义属性
+    _.setAttr(el, propName, propValue);
   }
-  var children = this.children || [];
 
-  children.forEach(function(child) {
-    //如果是虚拟DOM 则递归执行,如果只是字符串 只构建文本节点
-    var childeEl = child instanceof Element ? child.render() : document.createTextNode(child);
-    el.appendChild(childeEl);
+  // 遍历子节点,分Element类还是文字节点
+  // Element类则执行它的render,否则则创建文字节点
+  _.each(this.children, function(child) {
+    var childEl = child instanceof Element ? child.render() : document.createTextNode(child);
+    el.appendChild(childEl);
   });
   return el;
 };
 
-module.exports = function(tagName, props, children) {
-  return new Element(tagName, props, children);
-};
+module.exports = Element;

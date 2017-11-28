@@ -179,3 +179,133 @@ document.body.appendChild(ulRoot)
 </ul>
 ```
 
+
+
+### 步骤二 对比两棵虚拟DOM树的差异
+
+比较两棵DOM树的差异是Virtual Dom算法最核心的部分,也是所谓的Virtual Dom的diff算法.两个树的完全的diff算法是一个时间复杂度为O(n^3)的问题,但是在前端当中,很少会跨级的移动DOM元素,所以Virtual Dom只会对同一个层级的元素进行对比:
+
+![https://camo.githubusercontent.com/a32766a14f6b7fbe631475ed1a186fbd9de7f2c3/687474703a2f2f6c69766f7261732e6769746875622e696f2f626c6f672f7669727475616c2d646f6d2f636f6d706172652d696e2d6c6576656c2e706e67](https://camo.githubusercontent.com/a32766a14f6b7fbe631475ed1a186fbd9de7f2c3/687474703a2f2f6c69766f7261732e6769746875622e696f2f626c6f672f7669727475616c2d646f6d2f636f6d706172652d696e2d6c6576656c2e706e67)
+
+同一层级的元素只对其同一层的元素对比的话,这样算法的复杂度就可以达到O(n)
+
+
+
+#### 1. 深度优先遍历(DFS),记录差异
+
+在实际代码中,首先会对新旧两棵树进行一个深度优先的遍历,给每一个节点加上一个唯一的标记:
+
+![https://camo.githubusercontent.com/6cdc35026bcbb6aa0f8fb4aaca3596963192a7f3/687474703a2f2f6c69766f7261732e6769746875622e696f2f626c6f672f7669727475616c2d646f6d2f6466732d77616c6b2e706e67](https://camo.githubusercontent.com/6cdc35026bcbb6aa0f8fb4aaca3596963192a7f3/687474703a2f2f6c69766f7261732e6769746875622e696f2f626c6f672f7669727475616c2d646f6d2f6466732d77616c6b2e706e67)
+
+```js
+// diff 函数,对比两棵树
+function diff(oldTree, newTree) {
+  var index = 0; //当前节点
+  var patches = {}; //用于记录节点之间的差异
+  // 深度递归
+  dfsWalk(oldTree, newTree, index, patches);
+  // 将差异返回,之后进入下一步
+  return patches;
+}
+
+// 首先对两棵树进行深度优先遍历
+// 这个是用于对比差异的
+function dfsWalk(oldNode, newNode, index, patches) {
+  //对比不同 然后记录下来
+  patches[index] = [
+    //some code
+  ];
+
+  // 遍历子节点
+  diffChildren(oldNode.children, newNode.children, index, patches);
+}
+
+//遍历子节点
+// 用于计算标识,计算标识之后再去对比差异
+function diffChildren(oldChildren, newChildren, index, patches) {
+  var leftNode = null;
+  var currentNodeIndex = index;
+  oldChildren.forEach(function(child, i) {
+    // 记住新的
+    var newChild = newChildren[i];
+    // 计算节点标识,leftNode就是计数器...累加的
+    currentNodeIndex =
+      leftNode && leftNode.count ? currentNodeIndex + 1 + leftNode.count + 1 : currentNodeIndex + 1;
+    //将当前的标识和当前的点去diff,记录差异
+    dfsWalk(child, newChild, currentNodeIndex, patches); //对比差异
+    leftNode = child;
+  });
+}
+```
+
+流程: 把当前节点先对比了-->存起差异-->有子节点?-->子节点进入diffChildren获取标识(其实就是要知道这是第几个点)-->再去对比差异-->差异存在patches[子节点标识]里-->有子节点?.....
+
+例如，上面的`div`和新的`div`有差异，当前的标记是0，那么：
+
+```js
+patches[0] = [{difference}, {difference}] // 用数组存储新旧节点的不同
+```
+
+同理`p`是`patches[1]`，`ul`是`patches[3]`，类推。
+
+
+
+#### 2. 差异类型
+
+记录的差异类型,可能会有:
+
+1. 替换掉原来的节点,例如把上面的`div`换成了`section`
+2. 移动,删除,新增子节点,例如上面`div`的子节点，把`p`和`ul`顺序互换
+3. 修改了节点的属性
+4. 对于文本节点,文本内容可能会改变,例如修改上面的文本节点2内容为`Virtual DOM 2`。
+
+所以定义了差异类型:
+
+```js
+var REPLACE = 0
+var REORDER = 1
+var PROPS = 2
+var TEXT = 3
+```
+
+对于节点替换,只要判断新旧节点的tagName是不是一样的,如果不一样的说明需要替换掉.如`div`换成`section`,就记录下:
+
+```js
+patches[0] = [{
+  type:REPALCE,
+  node:newNode // el('section',props,children)
+}]
+```
+
+如果给`div`新增了属性id为container,就记录如下:
+
+```js
+patches[0] = [
+  {
+    type: REPALCE,
+    node: newNode // el('section',props,children)
+  },
+  {
+    type: PROPS,
+    props: {
+      id: 'container'
+    }
+  }
+];
+```
+
+文本节点:
+
+```js
+patches[2] = [{
+  type: TEXT,
+  content: "Virtual DOM2"
+}]
+```
+
+
+
+#### 3. 列表对比算法
+
+如果我们将`div`的子节点重新排序,例如`p,ul,div`顺序换成了`div,p,ul`,如果按照上面的同层级进行顺序对比的话,他们都会被替换掉,可是这样每一层都要替换,子节点也替换的话,这样DOM开销就非常大,而实际上并不需要替换节点,而是只需要将整个节点移动就可以达到,我们则需要记录下如何进行移动
+
