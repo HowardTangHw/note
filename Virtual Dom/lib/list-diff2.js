@@ -170,3 +170,4 @@ function getItemKey(item, key) {
   // string则返回值,如果是函数则处理一下
   return typeof key === 'string' ? item[key] : key(item);
 }
+module.exports = diff;

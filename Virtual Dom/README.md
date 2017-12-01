@@ -497,3 +497,149 @@ while (j++ < simulateList.length) {
 1. 先检查旧的哪些被删了,删了得就去掉
 2. 用已删除去掉元素的模拟列表,与新的作对比,看看哪些是新增的
 3. 与当前newList不一样的,先是看看换位,换位还不行则强行插入
+
+
+
+#### 4.diff算法
+
+使用到的工具函数
+
+对比两个节点的属性是否有修改
+
+```js
+// 遍历属性
+function diffProps(oldNode, newNode) {
+  var count = 0;
+  var oldProps = oldNode.props;
+  var newProps = newNode.props;
+  var key, value;
+  var propsPatches = {};
+  // 找到不同的属性(修改掉的)
+  for (key in oldProps) {
+    value = oldProps[key];
+    if (newProps[key] !== value) {
+      count++;
+      propsPatches[key] = newProps[key];
+    }
+  }
+
+  // 找到新加的属性
+  for (key in newProps) {
+    value = newProps[key];
+    if (!oldProps.hasOwnProperty(key)) {
+      count++;
+      propsPatches[key] = newProps[key];
+    }
+  }
+
+  // 如果所有属性都没改变
+  // If properties all are identical
+  if (count === 0) {
+    return null;
+  }
+
+  // 有改变的话返回修改的列表
+  return propsPatches;
+}
+```
+
+对比两个节点的子节点 看看有没有发生变化(使用了list-diff2,会返回子节点的修改moves,并且会有一个移好位置,删掉newList中删除的节点的children),把变化保存好,并且给节点都记录上了标识
+
+```js
+//遍历子节点
+// 用于计算标识,计算标识之后再去对比差异
+function diffChildren(oldChildren, newChildren, index, patches, currentPatch) {
+  var diffs = listDiff(oldChildren, newChildren, 'key');
+  newChildren = diffs.children;
+
+  // 如果有修改 把修改传回去
+  if (diffs.moves.length) {
+    var reorderPatch = { type: patch.REORDER, moves: diffs.moves };
+    currentPatch.push(reorderPatch);
+  }
+
+  // 这里只是计算标识
+  var leftNode = null;
+  var currentNodeIndex = index;
+  _.each(oldChildren, function(child, i) {
+    // 记住新的
+    var newChild = newChildren[i];
+    // 计算节点标识,leftNode就是计数器...累加的
+    currentNodeIndex =
+      leftNode && leftNode.count ? currentNodeIndex + 1 + leftNode.count + 1 : currentNodeIndex + 1;
+    //将当前的标识和当前的点去diff,记录差异
+    dfsWalk(child, newChild, currentNodeIndex, patches); //对比差异
+    leftNode = child;
+  });
+}
+```
+
+节点是否有Ignore属性
+
+```js
+function isIgnoreChildren (node) {
+  return (node.props && node.props.hasOwnProperty('ignore'))
+}
+```
+
+
+
+主函数
+
+```js
+// diff 函数,对比两棵树
+function diff(oldTree, newTree) {
+  var index = 0; //当前节点
+  var patches = {}; //用于记录节点之间的差异
+  // 深度递归
+  dfsWalk(oldTree, newTree, index, patches);
+  // 将差异返回,之后进入下一步
+  return patches;
+}
+```
+
+
+
+对比差异函数
+
+```js
+// 首先对两棵树进行深度优先遍历
+// 这个是用于对比差异的
+function dfsWalk(oldNode, newNode, index, patches) {
+  //对比不同 然后记录下来
+  var currentPathch = [];
+  //节点被删除了
+  if (newNode === null) {
+    //执行重新排序时，Real DOM节点将被删除，所以在这里不需要做任何事情
+  } else if (_.isString(oldNode) && _.isString(newNode)) {
+    //文本变化
+    if (newNode !== oldNode) {
+      currentPathch.push({ type: patch.TEXT, content: newNode });
+    }
+    // ↓ 节点是相同的,只是属性或者children发生了改变
+  } else if (oldNode.tagName === newNode.tagName && oldNode.key === newNode.key) {
+    // Diff props 辨别属性
+    var propsPatches = diffProps(oldNode, newNode);
+    if (propsPatches) {
+      currentPathch.push({ type: patch.PROPS, props: propsPatches });
+    }
+
+    // 遍历子节点 如果节点有`ignore`属性,就忽视掉它
+    if (!isIgnoreChildren(newNode)) {
+      diffChildren(oldNode.children, newNode.children, index, patches, currentPathch);
+    }
+  } else {
+    //节点不一样，用新节点替换旧节点
+    currentPatch.push({ type: patch.REPLACE, node: newNode });
+  }
+
+  // 如果当前节点有修改,则传到patches里
+  if (currentPathch.length) {
+    //最关键这一步,因为子节点进来的index都是不一样的
+    patches[index] = currentPathch;
+  }
+}
+```
+
+
+
