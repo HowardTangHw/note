@@ -309,3 +309,191 @@ patches[2] = [{
 
 如果我们将`div`的子节点重新排序,例如`p,ul,div`顺序换成了`div,p,ul`,如果按照上面的同层级进行顺序对比的话,他们都会被替换掉,可是这样每一层都要替换,子节点也替换的话,这样DOM开销就非常大,而实际上并不需要替换节点,而是只需要将整个节点移动就可以达到,我们则需要记录下如何进行移动
 
+假如现在有英文字母唯一标识每一个子节点:
+
+```markdown
+a b c d e f g h i 
+```
+
+现在对节点进行插入,删除,移动等操作,新增`j`节点,删除`e`节点,移动`h`节点:
+
+新节点顺序:
+
+```markdown
+a b c h d f g i j
+```
+
+现在知道了新旧的顺序,求最小的插入,删除操作的步骤,这个问题抽象出来其实就是字符串最小编辑距离问题（[Edition Distance](https://en.wikipedia.org/wiki/Edit_distance)）,最常见的解决算法是 [Levenshtein Distance](https://en.wikipedia.org/wiki/Levenshtein_distance)，通过动态规划求解，时间复杂度为 O(M * N)。但是我们不需要真的达到最小的操作,只需要优化一些比较常见的移动情况,牺牲一定DOM操作,让算法时间复杂度达到线性的(O(max(M,N))
+
+我们能够获取某个父节点的子节点的移动操作,就可以记录下来:
+
+```js
+patches[0]=[{
+  type:REORDER,
+  moves: [{remove or insert}, {remove or insert}]
+}]
+```
+
+:warning:需要注意的是,因为`tagName`是可重复的,不能用这个来进行比较,所以需要给子节点加上唯一标识`key`,列表对比的时候,使用`key`进行对比,这样才能复用老的DOM树上的节点.
+
+这样，我们就可以通过深度优先遍历两棵树，每层的节点进行对比，记录下每个节点的差异了。
+
+
+
+##### 3.1 list-diff2.js
+
+```js
+// 源码地址:https://github.com/livoras/list-diff/blob/master/lib/diff.js
+```
+
+首先一进来,用makeKeyIndexAndFree,将新旧list遍历一次,返回一个具有所有节点唯一标识`key`,和新增节点元素的对象.将列表转换为键项keyIndex对象。
+
+```js
+function makeKeyIndexAndFree(list, key) {
+  var keyIndex = {};
+  var free = [];
+  for (var i = 0, len = list.length; i < len; i++) {
+    var item = list[i];
+    var itemKey = getItemKey(item, key);
+    //存储每个节点的位置? 用于比较是否移动?
+    if (itemKey) {
+      keyIndex[itemKey] = i;
+    } else {
+      // 这里的是新增的DOM? 一般来说,oldList里面是不会有free的吧..而且KEY是新的
+      free.push(item);
+    }
+  }
+  return {
+    keyIndex: keyIndex,
+    free: free
+  };
+}
+```
+
+定义一个数组`moves`用于存储增删查改的对象,增删改主要用到以下几个函数
+
+```js
+// 删除的步骤,添加到moves中,删除的type为0,删除的索引是index
+  function remove(index) {
+    var move = { index: index, type: 0 };
+    moves.push(move);
+  }
+
+  //插入
+  function insert(index, item) {
+    var move = { index: index, item: item, type: 1 };
+    moves.push(move);
+  }
+
+  // 从模拟列表中删除
+  function removeSimulate(index) {
+    simulateList.splice(index, 1);
+  }
+```
+
+第一次遍历检查旧列表中的元素在新列表中是否被删除
+
+```js
+//first pass to check item in old list: if it's removed or not
+//第一次遍历检查旧列表中的项目是否被删除
+while (i < oldList.length) {
+  item = oldList[i];
+  itemKey = getItemKey(item, key);
+  // 如果这个值 在旧的当中存在
+  if (itemKey) {
+    // 判断是否在新的列表当中
+    if (!newKeyIndex.hasOwnProperty(item)) {
+      // 如果不在,则这个位置的值被删了
+      children.push(null);
+    } else {
+      var newItemIndex = newKeyIndex[itemKey];
+      //存储位于newList当前的位置,之后辨别的时候就会相等了
+      children.push(newList[newItemIndex]);
+    }
+  } else {
+    // 疑问:为什么在旧的当中也会存在,itemKey不存在的这种情况?是因为不符合规范?
+    // 如果这个位置的DOM不在了,那么从新添加的NEWLIST里面找,看看这个位置有没有被填补上
+    var freeItem = newFree[freeIndex++];
+    children.push(freeItem || null);
+  }
+  i++;
+}
+```
+
+利用模拟列表,先删掉已经不再新列表中的元素,步骤存入moves中
+
+```js
+// 模仿列表  浅拷贝,新组数
+var simulateList = children.slice(0);
+
+//remove items no longer exist
+//删除已经不存在的items
+i = 0;
+while (i < simulateList.length) {
+  if (simulateList[i] === null) {
+    remove(i);
+    removeSimulate(i);
+  } else {
+    i++;
+  }
+}
+```
+
+然后使用模拟列表与新列表对比,
+
+```js
+// i is cursor pointing to a item in new list
+// j is cursor pointing to a item in simulateList
+// i为newList的光标,j为模拟列表的光标
+var j = (i = 0);
+while (i < newList.length) {
+  // 处理新列表 与 模拟列表
+  item = newList[i];
+  itemKey = getItemKey(item, key);
+
+  var simulateItem = simulateList[j];
+  var simulateItemKey = getItemKey(simulateItem, key);
+
+  if (simulateItem) {
+    if (itemKey === simulateItemKey) {
+      // 新列表当前的内容和模拟列表的内容一致,则跳过这次
+      j++;
+    } else {
+      //不一样,则是新的(旧的里面没有),要插入操作,
+      if (!oldKeyIndex.hasOwnProperty(itemKey)) {
+        insert(i, item);
+      } else {
+        // 模拟列表当前的值,和新的不一样,并且旧的当中有
+        // 如果删除当前的值,会使它相等的话,就删除它
+        var nextItemKey = getItemKey(simulateList[j + 1], key);
+        if (nextItemKey === itemKey) {
+          remove(i);
+          removeSimulate(j);
+          j++; //在删除后,需要将j移位,否则会光标指向不准,需要光标指向下一个(当前个已经被删除了)
+        } else {
+          // 如果删除后并不会使其正确的话,就在这个地方 插入newList的值(算是强行纠错,是其与新列表相等)
+          insert(i, item);
+        }
+      }
+    }
+  } else {
+    // 在模拟列表中已经没了当前simulateList[j](就是在后面补上了,即newList的长度大于simulateList了?)
+    // 则插入
+    insert(i, item);
+  }
+}
+
+  // 如果j还没到最后的值,删除后面的j的元素(即simulateList的长度大于newList了)
+var k = 0;
+while (j++ < simulateList.length) {
+  remove(k + i);
+  k++;
+}
+
+```
+
+最后将操作步骤moves返回
+
+1. 先检查旧的哪些被删了,删了得就去掉
+2. 用已删除去掉元素的模拟列表,与新的作对比,看看哪些是新增的
+3. 与当前newList不一样的,先是看看换位,换位还不行则强行插入

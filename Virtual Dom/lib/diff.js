@@ -1,3 +1,7 @@
+var _ = require('./util')
+var patch = require('./patch')
+var listDiff = require('./list-diff2')
+
 // diff 函数,对比两棵树
 function diff(oldTree, newTree) {
   var index = 0; //当前节点
