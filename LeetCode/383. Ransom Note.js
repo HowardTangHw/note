@@ -17,6 +17,5 @@ var canConstruct = function(ransomNote, magazine) {
     hash[item]--;
     if (hash[item] < 0) return false;
   }
-
   return true;
 };
