@@ -16,7 +16,7 @@
 
 ```js
 var sortKey = "new" // 排序的字段，新增（new）、取消（cancel）、净关注（gain）、累积（cumulate）人数
-var sortType = 1 // 升序还是逆序
+var sortType = 1 // 升序还是逆序k
 var data = [{...}, {...}, {..}, ..] // 表格数据
 ```
 
@@ -642,4 +642,131 @@ function dfsWalk(oldNode, newNode, index, patches) {
 ```
 
 
+
+这样，我们就可以通过深度优先遍历两棵树，每层的节点进行对比，记录下每个节点的差异了。
+
+
+
+### 步骤三:把差异应用到真正的DOM树上
+
+因为步骤一所构建的JAVASCRIPT对象树和`render`出来真正的DOM树的信息,结构是一样的,所以我们可以对那颗DOM树也进行深度优先遍历,遍历的时候从步骤二生成的`patches`对象中找出当前的节点差异,然后对其进行`moves`里面的差异操作
+
+```js
+function path(node, patches) {
+  var walker = { index: 0 }; //记录当前是拿一个节点?树的哪一层?
+  dfsWalk(node, walker, patches);
+}
+function dfsWalk(node, walker, patches) {
+  var currentPatches = patches[walker.index]; //从patches拿出当前节点的差异
+
+  var len = node.childNodes ? node.childNodes.length : 0;
+  for (var i = 0; i < len; i++) {
+    //深度遍历子节点
+    var child = node.childNodes[i];
+    walker.index++;
+    dfsWalk(child, walker, patches);
+  }
+
+  // 如果差异存在,就操作
+  if (currentPatches) {
+    applyPatches(node, currentPatches);
+  }
+}
+```
+
+applyPatches，根据不同类型的差异对当前节点进行 DOM 操作：
+
+```js
+function applyPatches(node, currentPatches) {
+  _.each(currentPatches, function(currentPatch) {
+    switch (currentPatch.type) {
+      case REPLACE:
+        var newNode =
+          typeof currentPatch.node === 'string'
+            ? document.createTextNode(currentPatch.node)
+            : currentPatch.node.render();
+        node.parentNode.replaceChild(newNode, node);
+        break;
+      case REORDER:
+        reorderChildren(node, currentPatch.moves);
+        break;
+      case PROPS:
+        setProps(node, currentPatch.props);
+        break;
+      case TEXT:
+        if (node.textContent) {
+          node.textContent = currentPatch.content;
+        } else {
+          //ie
+          node.nodeValue = currentPatch.content;
+        }
+        break;
+      default:
+        throw new Error('Unknown patch type ' + currentPatch.type);
+    }
+  });
+}
+```
+
+工具函数
+
+```js
+// 设置节点属性
+function setProps(node, props) {
+  for (var key in props) {
+    if (props[key] === void 0) {
+      node.removeAttribute(key);
+    } else {
+      var value = props[key];
+      _.setAttr(node, key, value);
+    }
+  }
+}
+
+// 移动 重新排序
+function reorderChildren(node, moves) {
+  // 将类数组转换为数组
+  var staticNodeList = _.toArray(node.childNodes);
+  var maps = {};
+
+  // 这个是记录reorder的节点
+  _.each(staticNodeList, function(node) {
+    // 如果子节点的type  是 REORDER,
+    //就用hash记录下这个节点,
+    // key是 节点的唯一标识
+    if (node.nodeType === 1) {
+      var key = node.getAttribuge('key');
+      if (key) {
+        maps[key] = node;
+      }
+    }
+  });
+
+  _.each(moves, function(move) {
+    // 这里的index,是节点唯一标识?
+    var index = move.index;
+    if (move.type == 0) {
+      // remove item
+      if (staticNodeList[index] === node.childNodes[index]) {
+        //需要判断删除的节点的key和现在的KEY是否一样,(就是判断删的是不是正确的对象)
+        //因为有可能出现插入操作,导致删除的不是正确的节点
+        node.removeChild(node.childNodes[index]);
+      }
+      // 从列表内删除
+      staticNodeList.splice(index, 1);
+    } else if (move.type === 1) {
+      //重新排序操作(就是先删后加)
+      var insertNode = maps[move.item.key]
+        ? maps[move.iten.key].cloneNode(true) //复用旧的节点
+        : typeof move.item === 'object' //如果是一个对象?(其实是ELEMENT类?)
+          ? move.item.render()
+          : document.createTextNode(move.item);
+      // 将这个插入到列表中
+      staticNodeList.splice(index, 0, insertNode);
+      // 在节点中插入
+      node.insertBefore(insertNode, node.childNodes[index] || null);
+    }
+  });
+}
+```
 
