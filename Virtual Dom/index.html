@@ -1,13 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Document</title>
 </head>
+
 <body>
-  
+
 </body>
+
 </html>
 <script src="./dist/bundle.js"></script>
+<script>
+
+  var el = svd.el
+  var diff = svd.diff
+  var patch = svd.patch
+
+  // 1. 构建虚拟DOM
+  var tree = el('div', { 'id': 'container' }, [
+    el('h1', { style: 'color: blue' }, ['simple virtal dom']),
+    el('p', ['Hello, virtual-dom']),
+    el('ul', [el('li')])
+  ])
+
+  // 2. 通过虚拟DOM构建真正的DOM
+  var root = tree.render()
+  document.body.appendChild(root)
+
+
+  setTimeout(() => {
+    // 3. 生成新的虚拟DOM
+    var newTree = el('div', { 'id': 'container' }, [
+      el('h1', { style: 'color: red' }, ['simple virtal dom']),
+      el('p', ['Hello, virtual-dom2']),
+      el('ul', [el('li', ['this is 1']), el('li', ['this is 2'])])
+    ])
+    // 4. 比较两棵虚拟DOM树的不同
+    var patches = diff(tree, newTree)
+
+    // 5. 在真正的DOM元素上应用变更
+    patch(root, patches)
+  }, 1000);
+
+
+</script>
