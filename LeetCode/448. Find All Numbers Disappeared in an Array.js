@@ -48,4 +48,5 @@ var findDisappearedNumbers = function(nums) {
   for (var i = 1; i <= len; i++) {
     !hash[i] && res.push(i);
   }
+  return res;
 };
