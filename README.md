@@ -4,9 +4,10 @@
 
 - [ ] [ECMAScript6 入门](http://es6.ruanyifeng.com/)  
 - [x] LeetCode Easy 30题 
-- [ ] LeetCode 60题 
+- [x] LeetCode 60题  2017/12/12 62道easy难度
+- [ ] LeetCode 90题 
 - [x] [Underscore.js 源码解读 & 系列文章](https://github.com/hanzichi/underscore-analysis)  
-- [ ]  backbone源码
+- [ ] backbone源码
 - [x] 学习了解配置gulp
 - [x] [了解webpack](https://doc.webpack-china.org/)
 - [ ] vue Api
