@@ -1,0 +1,20 @@
+{
+  "name": "parcel",
+  "version": "1.0.0",
+  "description": "[中文文档](http://www.parceljs.io)",
+  "main": "index.js",
+  "scripts": {
+    "dev": "parcel index.html -p 3000",
+    "build": "rm -rf docs && parcel build index.html -d bundle --public-url ./ --no-minify"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "autoprefixer": "^7.2.2",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "node-sass": "^4.7.2",
+    "postcss-modules": "^1.1.0"
+  }
+}
