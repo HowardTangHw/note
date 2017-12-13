@@ -42,7 +42,6 @@ var nextGreatestLetter = function(letters, target) {
   return letters[left] || letters[0];
 };
 
-
 //使用new Set() Runtime: 115 ms
 
 var nextGreatestLetter = function(letters, target) {
@@ -52,4 +51,4 @@ var nextGreatestLetter = function(letters, target) {
     if (x.charCodeAt() > targetNum) return x;
   }
   return letters[0];
-}
+};
