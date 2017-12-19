@@ -18,5 +18,5 @@
 17. [Async 函数](./17.Async函数.md)
 18. [Class的基本语法](./18.Class的基本语法.md)
 19. [Class的继承](./19.Class的继承.md)
-20. ​
+20. [Decorator](./20.Decorator.md)
 
