@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <style>
+    span {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>
+    <a href="http://ewind.us/2017/nano-vdom/#%E6%A0%91%E4%B8%8E%E9%80%92%E5%BD%92" target="_blank">自制前端框架之 50 行的虚拟 DOM</a>
+  </h1>
+  <button id="btn">Change</button>
+  <div id="root"></div>
+</body>
+
+</html>
+<script>
+  // 模拟DOM
+  function dom(type, props, ...children) {
+    // 等价于 { type: type, props: props, children: children }
+    return { type, props, children };
+  }
+
+  // 绑定真实DOM ,输入虚拟节点,返回真实节点
+  function createElement(node) {
+    //节点为纯文本的时候,返回文本节点,这个时候节点应该为叶子节点
+
+    if (typeof node === 'string') {
+      return document.createTextNode(node);
+    } else {
+      // 节点内容为非叶子节点的时候,递归下方的 非叶子节点,即非文本节点
+      const $el = document.createElement(node.type);
+      // 修改 加上属性
+      const props = node.props;
+      for (var propName in props) {
+        var propValue = props[propName];
+        $el.setAttribute(propName, propValue);
+      }
+      // 将子节点递归调用,然后填进父节点里面
+      node.children.map(createElement).forEach($el.appendChild.bind($el));
+      return $el;
+    }
+  }
+
+  //对比新旧节点
+  function isChanged(node1, node2) {
+    /*         ↓ 类型不一样 文字节点与节点       ↓都是文字节点 可是内容不一样                         ↓标签名不一样             */
+    return (typeof node1 !== typeof node2) || (typeof node1 === 'string' && node1 !== node2) || (node1.type !== node2.type);
+  }
+
+  // 更新虚拟DOM  diff算法
+  function updateElement($parent, newNode, oldNode, index = 0) {
+    // 不存在旧节点时候
+    if (!oldNode) {
+      // 将新节点整个覆盖进去
+      $parent.appendChild(createElement(newNode));
+    } else if (!newNode) {
+      //旧节点存在,可是新节点没了,这时候 删掉这一层的节点
+      $parent.removeChilad($parent.childNodes[index]);
+    } else if (isChanged(oldNode, newNode)) {
+      // 新旧节点都存在,可是发生变化了,例如类型发生变化,文案发生变化,标签名发生变化
+      // 用新的替换旧的
+      $parent.replaceChild(createElement(newNode), $parent.childNodes[index]);
+    } else if (newNode.type) {
+      // 新旧节点完全一样,这时候递归遍历他们的子节点
+      const newLen = Math.max(newNode.children.length, oldNode.children.length);
+      for (let i = 0; i < newLen; i++) {
+        updateElement($parent.childNodes[index], newNode.children[i], oldNode.children[i], i);
+      }
+    }
+  }
+
+  // ------------------------测试----------------------------
+  const a = dom(
+    'div',
+    { class: 'has' },
+    '666',
+    dom('span', null, '123'),
+    dom('span', null, '456'),
+    dom('span', null, '789'),
+  )
+  const b = dom(
+    'span',
+    null,
+    '123',
+    dom('div', null, '123'),
+    dom('span', null, '456'),
+    dom('span', null, '666')
+  )
+  const $root = document.getElementById('root')
+  const $btn = document.getElementById('btn')
+  updateElement($root, a)
+  $btn.addEventListener('click', () => {
+    updateElement($root, b, a)
+  })
+// 感觉这个 不够详细,因为如果父标签只是换了个标签名 那么就将整个节点替换了?
+
+</script>
