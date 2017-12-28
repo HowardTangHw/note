@@ -16,11 +16,10 @@ var longestPalindrome = function(s) {
   let res = 0;
   let flag = 0;
   arr.forEach(v => {
-    if (!hash[v]) hash[v] = 0;
-    hash[v]++;
+    hash[v] = ~~hash[v] + 1;
   });
   for (let key in hash) {
-    var k = hash[key];
+    let k = hash[key];
     if (k % 2 == 0) res += k;
     if ((k + 1) % 2 == 0) {
       res += k - 1;
