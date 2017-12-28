@@ -19,4 +19,5 @@
 18. [Class的基本语法](./18.Class的基本语法.md)
 19. [Class的继承](./19.Class的继承.md)
 20. [Decorator](./20.Decorator.md)
-
+21. [Module的语法](./21.Module的语法.md)
+22. [Module的加载实现](./22.Module的加载实现.md)
