@@ -16,4 +16,9 @@ set PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1
 
 
 
-....然后我下不了chromium...............
+安装chromium
+
+``` bash
+yarn add chromium -d
+```
+

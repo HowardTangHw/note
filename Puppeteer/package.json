@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "chromium": "^1.0.2"
+  }
+}
