@@ -11,6 +11,26 @@
 - npm install sass-loader node-sass webpack --save-dev
 - babel 
 - npm install --save-dev babel-loader babel-core babel-preset-es2015(这个是版本) webpack
+
+
+> 在最新版本中,只需要安装babel-preset-env,然后可以在babel的配置项中配置目标的浏览器
+
+```js
+//例如
+"babel": {
+  "presets": [
+    [
+      "env",
+      {
+        "targets": {
+          "browsers": ["last 2 versions", "ie >= 7"]
+        }
+      }
+    ]
+  ]
+},
+```
+
 - npm install babel-plugin-transform-runtime --save-dev
 - 注意： 你必须执行 npm install babel-plugin-transform-runtime --save-dev 来把它包含到你的项目中，也要使用 npm install babel-runtime --save 把 babel-runtime 安装为一个依赖。
 - file-loader (将文件输出到输出文件夹里)

@@ -1,4 +1,3 @@
-@@ -0,0 +1,83 @@
 <template>
     <div class='head'>
         <router-link to='/'><img src='../assets/cnodejs.svg' title='cnodejs.svg'>
