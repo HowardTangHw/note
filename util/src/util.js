@@ -1,5 +1,5 @@
 // link:https://github.com/Chalarangelo/30-seconds-of-code
- import * as Adapter  from './Adapter';
+ import Adapter  from './Adapter';
  console.log(Adapter);
 let util = {};
 
