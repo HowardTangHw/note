@@ -56,6 +56,17 @@ const countBy = (arr, fn) =>
   }, {});
 
 /**
+ * groupBy
+ * 核心思想与countBy差不多,不过countBy是计算次数,而groupBy则把元素展示出来
+ * */
+
+const groupBy = (arr, fn) =>
+  arr.map(typeof fn === 'function' ? fn : val => val[fn]).reduce((acc, val, i) => {
+    acc[val] = (acc[val] || []).concat(arr[i]);
+    return acc;
+  }, {});
+
+/**
  * countOccurrences
  * 统计事件,在输入的数组中,target出现的次数,
  * 这里要输入initialvalue初始化acc,否则他将会从数组第一个数开始累加
@@ -172,5 +183,28 @@ const findLastIndex = (arr, fn) =>
     .map((v, i) => [i, v])
     .filter(value => fn(value[1], value[0], arr))
     .slice(-1)[0][0];
+
+/**
+ * flatten
+ * 与deepFlatten差不多,不过deepFlatten是多维拆到1维
+ * 而flatten是可以指定层数的(就是拆多少层)
+ * 默认层数为1
+ * */
+
+const flatten = (arr, deepth) =>
+  deepth !== 1
+    ? arr.reduce((a, v) => a.concat(Array.isArray(v) ? flatten(v, deepth - 1) : v), [])
+    : arr.reduce((a, v) => a.concat(v), []);
+
+/**
+ * forEachRight
+ * 从后边开始循环,其实是利用slice创建一个新数组,因为reverse会污染原数组,
+ * */
+
+const forEachRight = (arr, cb) =>
+  arr
+    .slice(0)
+    .reverse()
+    .forEach(cb);
 
 export default { ary, call };
