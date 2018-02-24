@@ -468,4 +468,110 @@ const pullBy = (arr, ...args) => {
   pulled.forEach(v => arr.push(v));
 };
 
+/**
+ * reducedFilter(data,keys,fn)
+ * 筛选符合fn的data,提取出相关的keys
+ * */
+
+const reducedFilter = (data, keys, fn) =>
+  data.filter(fn).map(el =>
+    keys.reduce((acc, key) => {
+      acc[key] = el[key];
+      return acc;
+    }, {})
+  );
+
+/**
+ * reduceSuccessive
+ * 对累加器和数组中的每个元素（从左到右）应用一个函数，返回经过函数处理后的数组。
+ * 传入的acc,作为一个数组[acc],传进reduce里面,就会成为res的第一个值
+ * 所以fn也会对第一个值进行处理
+ * arr.reduce中的res其实就是[acc],就是最后需要返回的数组
+ */
+const reduceSuccessive = (arr, fn, acc) =>
+  arr.reduce((res, val, i, arr) => (res.push(fn(res.slice(-1)[0], val, i, arr)), res), [acc]);
+
+/**
+ * reduceWhich
+ * 返回数组的最小值(默认)
+ * 可以设置第三个参数(a,b)=>b-a,返回最大值
+ * */
+
+const reduceWhich = (arr, compartor = (a, b) => a - b) =>
+  arr.reduce((a, b) => (compartor(a, b) > 0 ? b : a));
+
+/**
+ * remove
+ * Removes elements from an array for which the given function returns false.
+ * 返回的数组都是通过fn的,而原数组保留的都是未通过fn的
+ * example:
+ * let a =[1,2,3,4]
+ * remove(a,n=>n%2===0) //[2,4]
+ * a                    //[1,3]
+ */
+
+const remove = (arr, fn) =>
+  Array.isArray(arr)
+    ? arr.filter(fn).reduce((acc, val) => {
+        arr.slice(arr.indexOf(val), 1);
+        return acc.concat(val);
+      }, [])
+    : [];
+
+/**
+ * sample
+ * 数组随机出一个数
+ * */
+
+const sample = arr => arr[Math.floor(Math.random() * arr.length)];
+
+/**
+ * sampleSize
+ * 随机输出一个数组(数组长度为第第二个参数默认为1)
+ * 第二个参数输入超出输入数组长度,则打乱数组输出
+ * 用了 Fisher-Yates algorithm 打乱数组
+ * */
+
+const sampleSize = ([...arr], n = 1) => {
+  let m = arr.length;
+  while (m) {
+    const i = Math.floor(Math.random() * m--);
+    [arr[m], arr[i]] = [arr[i], arr[m]];
+  }
+  return arr.slice(0, n);
+};
+
+/**
+ * shuffle
+ * 打乱数组 使用Fisher-Yates
+ */
+
+const shuffle = arr => {
+  let m = arr.length;
+  while (m) {
+    const i = Math.floor(Math.random() * m--);
+    [arr[m], arr[i]] = [arr[i], arr[m]];
+  }
+  return arr;
+};
+
+/**
+ * similarity
+ * remove values that are not part of values
+ * */
+
+const similarity = (arr, values) => arr.filter(v => values.includes(v));
+
+/**
+ * sortedIndex
+ * 找出输入值,在原数组中插入的位置
+ * 原数组必须是有序的
+ * */
+
+const sortedIndex = (arr, n) => {
+  const isDescending = arr[0] > arr[arr.length - 1];
+  const index = arr.findIndex(el => (isDescending ? n >= el : n <= el));
+  return index == -1 ? arr.length : index;
+};
+
 export default { ary, call };
