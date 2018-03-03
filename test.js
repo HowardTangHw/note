@@ -1,10 +1,11 @@
-class Point {
-  constructor() {
-    //some code;
-  }
-}
+class MyBaseClass {}
+let MyMixins = superClass =>
+  class extends superClass {
+    foo() {
+      console.log('foo from MyMixins');
+    }
+  };
+class MyClass extends MyMixins(MyBaseClass) {}
 
-Object.assign(Point.prototype, {
-  toString() {},
-  toValue() {}
-});
+let a = new MyClass();
+a.foo();
