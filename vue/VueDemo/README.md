@@ -2,13 +2,9 @@
 
 一个Vue练习..
 
-
-
-原作者:[ShuiRong Lin](https://github.com/shuiRong/)
-
-github:https://github.com/shuiRong/VueCnodeJS
-
-
+#### event bus
+这里项目并不需要vuex,可以通过event bus来进行组件之间的传参
+[event bus笔记](../eventBus.html)
 
 ##### 记录一下`处理文掉文章页两次相同xhr的问题和一个问题`
 
@@ -29,3 +25,8 @@ watch: {
 > 子==>父==>子
 
 ![{AEA94CD8-8FBD-4FFF-8A9F-C3D22CF0E3CB}]({AEA94CD8-8FBD-4FFF-8A9F-C3D22CF0E3CB}.bmp)
+
+
+
+原作者:[ShuiRong Lin](https://github.com/shuiRong/)
+github:https://github.com/shuiRong/VueCnodeJS

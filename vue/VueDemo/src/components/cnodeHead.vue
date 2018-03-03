@@ -7,7 +7,7 @@
             <div class='dialogDiv'>
                 <span><strong>作者: &nbsp;&nbsp;</strong></span><a href='https://github.com/HowardTangHw/' target='_blank'>邓皓文</a></span>
                 <br>
-                <span><strong>源代码: &nbsp;&nbsp;</strong></span><a href='https://github.com/HowardTangHw/note/vue/vueDemo' target='_blank'>Github</a><span class='star'>&nbsp;&nbsp;Star Star</span>
+                <span><strong>源代码: &nbsp;&nbsp;</strong></span><a href='https://github.com/HowardTangHw/note/tree/master/vue/VueDemo' target='_blank'>Github</a><span class='star'>&nbsp;&nbsp;Star Star</span>
                 <br>
                 <br>
                 <span><strong>技术栈: </strong></span>
