@@ -4,7 +4,7 @@
 
 
 
-作者:[ShuiRong Lin](https://github.com/shuiRong/)
+原作者:[ShuiRong Lin](https://github.com/shuiRong/)
 
 github:https://github.com/shuiRong/VueCnodeJS
 
