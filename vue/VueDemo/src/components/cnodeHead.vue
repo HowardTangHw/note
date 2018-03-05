@@ -5,16 +5,16 @@
         <el-button type='text' @click='dialogVisible=true'>关于</el-button>
         <el-dialog title='Vue.js重写CnodeJS社区' v-model='dialogVisible' size='tiny'>
             <div class='dialogDiv'>
-                <span><strong>作者: &nbsp;&nbsp;</strong></span><a href='https://shuirong.github.io/' target='_blank'>林水溶</a></span>
+                <span><strong>作者: &nbsp;&nbsp;</strong></span><a href='https://github.com/HowardTangHw/' target='_blank'>邓皓文</a></span>
                 <br>
-                <span><strong>源代码: &nbsp;&nbsp;</strong></span><a href='https://github.com/shuiRong/VueCnodeJS' target='_blank'>Github</a><span class='star'>&nbsp;&nbsp;Star Star</span>
+                <span><strong>源代码: &nbsp;&nbsp;</strong></span><a href='https://github.com/HowardTangHw/note/tree/master/vue/VueDemo' target='_blank'>Github</a><span class='star'>&nbsp;&nbsp;Star Star</span>
                 <br>
                 <br>
                 <span><strong>技术栈: </strong></span>
                 <ul>
                     <li>Vue.js</li>
                     <li>Vue-router</li>
-                    <li>Vue-resource</li>
+                    <li>axios</li>
                     <li>Element</li>
                     <li>CnodeJS API</li>
                 </ul>
