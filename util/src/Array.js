@@ -577,6 +577,8 @@ const sortedIndex = (arr, n) => {
 
 /**
  * sortedLastIndex
+ * sortedLastIndex存在疑点
+ * issue:https://github.com/Chalarangelo/30-seconds-of-code/issues/629
  * 找出输入值,在原数组中最后插入的位置
  * 返回值应插入到数组中的最高索引，以保持其排序顺序
  * */
@@ -591,7 +593,7 @@ const sortedLastIndex = (arr, n) => {
  * sortedIndexBy
  * 输入数组,目标值,函数,
  * 经过函数处理,
- * 返回值应插入到数组中的最高索引，以保持其排序顺序
+ * 根据提供的迭代器函数，返回值应该插入到数组中的最低索引，以便维护其排序顺序。
  * */
 
 const sortedIndexBy = (arr, n, fn) => {
@@ -600,5 +602,89 @@ const sortedIndexBy = (arr, n, fn) => {
   const index = arr.findIndex(el => (isDescending ? val >= fn(el) : val <= fn(el)));
   return index === -1 ? arr.length : index;
 };
+
+/**
+ * sortedLastIndexBy
+ * 输入数组,目标值,函数,
+ * 经过函数处理,
+ * 根据提供的迭代器函数，返回值应该插入到数组中的最高索引，以便维护其排序顺序。
+ */
+
+const sortedLastIndexBy = (arr, n, fn) => {
+  const isDescending = fn(arr[0]) > fn(arr[arr.length - 1]);
+  const val = fn(n);
+  const index = arr.findIndex(el => (isDescending ? val <= fn(el) : val >= fn(el)));
+  return index === -1 ? 0 : arr.length - index;
+};
+
+/**
+ * stableSort
+ * 与sort大致相同,但是有一点不同就是
+ * 如果比较的项相等，则保留它们的初始顺序。
+ * 例如:
+ * const arr = [0,'1', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+ * stableSort(arr, (a,b) => b-a); // [10, 9, 8, 7, 6, 5, 4, 3, 2, "1", 1, 0]
+ * const arr = [0, 1,'1', 2, 3, 4, 5, 6, 7, 8, 9, 10];
+ * stableSort(arr, (a,b) => b-a); // [10, 9, 8, 7, 6, 5, 4, 3, 2, 1,"1", 0]
+ */
+
+const stableSort = (arr, compare) =>
+  arr
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => compare(a, b) || a.index - b.index)
+    .map(({ item }) => item);
+
+/**
+ * symmetricDifference
+ * 等差对分也叫对称差集
+ * 对称差集：集合A与集合B的对称差集定义为集合A与集合B中所有不属于A∩B的元素的集合，记为A△B,也就是说A△B={x|x∈A∪B,x∉A∩B}，即A△B=(A∪B)—(A∩B).也就是A△B=（A—B）∪（B—A）
+ * */
+
+const symmetricDifference = (a, b) => {
+  let sA = new Set(a),
+    sB = new Set(b);
+  return [...a.filter(x => !sB.has(x)), ...b.filter(x => !sA.has(x))];
+};
+
+/**
+ * symmetricDifferenceBy
+ * 与上面一样,不过是经过fn处理(就是筛选fn值后的等差对分)
+ * */
+const symmetricDifferenceBy = (a, b, fn) => {
+  let sA = new Set(a.map(v => fn(v))),
+    sB = new Set(b.map((v = fn(v))));
+  return [...a.filter(x => !sB.has(fn(x))), ...b.filter(x => !sA.has(fn(x)))];
+};
+
+/**
+ * symmetricDifferenceWith
+ * 与上面差不多,不过这次的是compare(对比函数),输入的值是两个
+ * */
+
+const symmetricDifferenceWith = (a, b, comp) => [
+  ...a.filter(v => b.findIndex(d => comp(v, d)) === -1),
+  ...b.filter(v => a.findIndex(d => comp(v, d)) === -1)
+];
+
+/**
+ * tail
+ * Return Array.slice(1) if the array's length is more than 1, otherwise, return the whole array.
+ */
+const tail = arr => (arr.length > 1 ? arr.slice(1) : arr);
+
+/**
+ * take
+ * 从0开始切割到n 与drop不一样
+ * */
+
+const take = (arr, n = 1) => arr.slice(0, n);
+
+/**
+ * takeRight
+ * 从最后一个开始切割
+ * */
+
+const takeRight = (arr, n = 1) => arr.slice(arr.length - n);
+
 
 export default { ary, call };
