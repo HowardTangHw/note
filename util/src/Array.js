@@ -566,12 +566,39 @@ const similarity = (arr, values) => arr.filter(v => values.includes(v));
  * sortedIndex
  * 找出输入值,在原数组中插入的位置
  * 原数组必须是有序的
+ * 返回值应插入到数组中的最高索引，以保持其排序顺序
  * */
 
 const sortedIndex = (arr, n) => {
   const isDescending = arr[0] > arr[arr.length - 1];
   const index = arr.findIndex(el => (isDescending ? n >= el : n <= el));
   return index == -1 ? arr.length : index;
+};
+
+/**
+ * sortedLastIndex
+ * 找出输入值,在原数组中最后插入的位置
+ * 返回值应插入到数组中的最高索引，以保持其排序顺序
+ * */
+
+const sortedLastIndex = (arr, n) => {
+  const isDescending = arr[0] > arr[arr.length - 1];
+  const index = arr.reverse().findIndex(el => (isDescending ? n <= el : n >= el));
+  return index === -1 ? 0 : arr.length - 1 - index;
+};
+
+/**
+ * sortedIndexBy
+ * 输入数组,目标值,函数,
+ * 经过函数处理,
+ * 返回值应插入到数组中的最高索引，以保持其排序顺序
+ * */
+
+const sortedIndexBy = (arr, n, fn) => {
+  const isDescending = fn(arr[0]) > fn(arr[arr.length - 1]);
+  const val = fn(n);
+  const index = arr.findIndex(el => (isDescending ? val >= fn(el) : val <= fn(el)));
+  return index === -1 ? arr.length : index;
 };
 
 export default { ary, call };
