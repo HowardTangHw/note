@@ -686,5 +686,137 @@ const take = (arr, n = 1) => arr.slice(0, n);
 
 const takeRight = (arr, n = 1) => arr.slice(arr.length - n);
 
+/**
+ * takeWhile
+ * 从0开始直到函数返回`true`的时候停止,最后返回被移除的值(即为`false`的值);
+ * */
+
+const takeWhile = (arr, func) => {
+  for (let i in arr) if (func(arr[i])) return arr.slice(0, i);
+  return arr;
+};
+
+/**
+ * takeRightWhile
+ * 从数组的末端开始移除值,直到函数返回`true`的时候停止,最后返回被移除的值(即为`false`的值);
+ * */
+
+const takeRightWhile = (arr, func) => {
+  // 源代码是实用 for(let i of arr.reverse().keys()) 我感觉没必要,直接用for in 了.
+  for (let i in arr.reverse())
+    if (func(arr[i])) return arr.reverse().slice(arr.length - i, arr.length);
+  return arr;
+};
+
+/**
+ * union
+ * 合并数组
+ * */
+
+const union = (a, b) => Array.from(new Set([...a, ...b]));
+
+/**
+ * unionBy
+ * 将提供的函数应用于两个数组的每个元素后，返回两个数组中任何一个数组中存在的每个元素。
+ * 返回a的值,和在应用函数中,b有a没有的值
+ * */
+
+const unionBy = (a, b, func) => {
+  let s = new Set(a.map(x => func(x)));
+  return Array.from(new Set([...a, ...b.filter(x => !s.has(func(x)))]));
+};
+
+/**
+ * unionWith
+ * 返回a的值,和在比较函数中,b有a没有的值
+ * */
+
+const unionWith = (a, b, comp) =>
+  Array.from(new Set([...a, ...b.filter(y => a.findIndex(x => comp(x, y)) === -1)]));
+
+/**
+ * uniqueElements
+ * 去重
+ * */
+
+const uniqueElements = arr => [...new Set(arr)];
+
+/**
+ * zip
+ * 创建一个数组,将输入的数组根据索引值分类
+ * ['a', 'b'], [1, 2], [true, false]  ==> [['a', 1, true], ['b', 2, false]]
+ * */
+
+const zip = (...arr) => {
+  const maxLen = Math.max(...arr.map(x => x.length));
+  return Array.from({ length: maxLen }).map((_, i) => {
+    return Array.from({ length: arr.length }, (_, k) => arr[k][i]);
+  });
+};
+
+/**
+ * zipObject
+ * 压缩成对象
+ * */
+
+const zipObject = (props, values) =>
+  props.reduce((obj, prop, index) => ((obj[prop] = values[index]), obj), {});
+
+/**
+ * zipWith
+ * 如果最后一个函数,就将他利用函数处理,否则与zip没区别
+ * 如果是函数 就将..arr中的每个数组的值作为传参传进fn里面
+ * 例如arr= [1, 2], [10, 20], [100, 200]
+ * 那么fn就有三个参数fn(1,10,100),fn(2,20,200);最后将结果放回新建的Array里面
+ * */
+
+const zipWith = (...arr) => {
+  const fn = typeof arr[arr.length - 1] === 'function' ? arr.pop() : undefined;
+  return Array.from(
+    { length: Math.max(...arr.map(x => x.length)) },
+    (_, i) => (fn ? fn(...arr.map(array => array[i])) : arr.map(array => array[i]))
+  );
+};
+
+/**
+ * unzip
+ * 解压,与上面的相反
+ * acc的长度由数组中最大那个决定,然后将每一项都初始化为数组
+ * 利用forEach,根据索引值push值 从而进行解压
+ * acc[i]代表的是一个数组
+ * */
+
+const unzip = arr =>
+  arr.reduce(
+    (acc, val) => (val.forEach((v, i) => acc[i].push(v)), acc),
+    Array.from({ length: Math.max(...arr.map(x => x.length)) }).map(x => [])
+  );
+
+/**
+ * unzipWith
+ * 将unzip的数组再通过fn处理
+ * */
+
+const unzipWith = (arr, fn) =>
+  arr
+    .reduce(
+      (acc, val) => (val.forEach((v, i) => acc[i].push(v)), acc),
+      Array.from({ length: Math.max(...arr.map(x => x.length)) }).map(x => [])
+    )
+    .map(val => fn(...val));
+
+/**
+ * without
+ * 筛选(去掉)出具有指定值之一的数组元素(保留没有指定值的数组)。
+ * */
+
+const without = (arr, ...args) => arr.filter(v => !args.includes(v));
+
+/**
+ * xProd
+ * 通过从数组中创建每个可能的对创建一个新的数组。
+ * */
+
+const xProd = (a, b) => a.reduce((acc, x) => acc.concat(b.map(y => [x, y])), []);
 
 export default { ary, call };
