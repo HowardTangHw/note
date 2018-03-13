@@ -579,6 +579,7 @@ const sortedIndex = (arr, n) => {
  * sortedLastIndex
  * sortedLastIndex存在疑点
  * issue:https://github.com/Chalarangelo/30-seconds-of-code/issues/629
+ * fixed:https://github.com/Chalarangelo/30-seconds-of-code/pull/632
  * 找出输入值,在原数组中最后插入的位置
  * 返回值应插入到数组中的最高索引，以保持其排序顺序
  * */
@@ -586,7 +587,7 @@ const sortedIndex = (arr, n) => {
 const sortedLastIndex = (arr, n) => {
   const isDescending = arr[0] > arr[arr.length - 1];
   const index = arr.reverse().findIndex(el => (isDescending ? n <= el : n >= el));
-  return index === -1 ? 0 : arr.length - 1 - index;
+  return index === -1 ? 0 : arr.length - index;
 };
 
 /**
