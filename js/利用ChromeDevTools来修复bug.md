@@ -46,7 +46,7 @@
 
 - 勾选 **click** 事件
 
-  ![0_kMC1NRb04kmBZ82P](D:\note\js\assets/0_kMC1NRb04kmBZ82P.png)
+  ![0_kMC1NRb04kmBZ82P](./assets/0_kMC1NRb04kmBZ82P.png)
 
   
 
@@ -77,7 +77,7 @@ function onClick() {
 
 - 现在点击 **Step over next function call** 按钮:
 
-![a](D:\note\js\assets/0_98yNamZxcsTisowa.png)
+![0_98yNamZxcsTisowa](assets/0_98yNamZxcsTisowa.png)
 
 ​	这告诉DevTools执行inputsAreEmpty()。注意DevTools跳过几行代码。这是因为inputsAreEmpty()计算为false,因此if语句的代码块不执行。 
 
@@ -101,7 +101,7 @@ function onClick() {
 
 - 点击**Resume script execution** 按钮
 
-  ![0_wFGPXpdqODqzs2mY](D:\note\js\assets/0_wFGPXpdqODqzs2mY-1525418629586.png)
+  ![0_n6QiQtGxRZvieXoa](assets/0_n6QiQtGxRZvieXoa.png)
 
 代码会继续执行,直到你刚刚放置断点的地方
 
@@ -116,14 +116,14 @@ function onClick() {
 产生错误的另一个常见原因就是一个变量或函数产生出一个与预期不相同的值,许多的开发人员会通过`console.log()`来查看值,但这非常的无趣与乏味:
 
  	1. 你需要手动的编辑并且调用`console.log()`
- 	2. 你可能不知道哪些变量是与产生BUG相关的,所以你需要监视非常多的变量
+		2. 你可能不知道哪些变量是与产生BUG相关的,所以你需要监视非常多的变量
 
 在DevTools有一个功能可以代替`console.log()`,这就是Watch Expressions ,他不仅可以观察监视变量,还可以存储任何JS的表达式:
 
 - 在**Sources**面板中,点击**Watch** 按钮
 - 点击**Add Expression** 
 
-![0_UpumeYQc3_gv8JVk](D:\note\js\assets/0_UpumeYQc3_gv8JVk-1525419135000.png)
+![0_UpumeYQc3_gv8JVk](assets/0_UpumeYQc3_gv8JVk.png)
 
 - 输入 `typeof sum`
 
@@ -143,7 +143,7 @@ function onClick() {
 
 - 按下回车,控制台会输出`6`,这是我们想要的答案
 
-  ![0_tcs5P_NdlIU_9dpu](D:\note\js\assets/0_tcs5P_NdlIU_9dpu.png)
+  ![0_tcs5P_NdlIU_9dpu](assets/0_tcs5P_NdlIU_9dpu.png)
 
 
 
@@ -157,12 +157,12 @@ function onClick() {
 
 - 点击 **Deactivate breakpoints** 
 
-  ![0_hyuaGwUfClHRIpuk](D:\note\js\assets/0_hyuaGwUfClHRIpuk.png)
+  ![0_hyuaGwUfClHRIpuk](assets/0_hyuaGwUfClHRIpuk.png)
 
   如果这个按钮变成了蓝色的,就代表他已经开启,DevTools会忽略我们设置的任何断点
 
 - 点击 **Resume script execution**
 
-![0_n6QiQtGxRZvieXoa](D:\note\js\assets/0_n6QiQtGxRZvieXoa.png)
+![0_n6QiQtGxRZvieXoa](assets/0_n6QiQtGxRZvieXoa.png)
 
 这时候页面就会输出正确的值了
