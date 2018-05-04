@@ -129,7 +129,7 @@ function onClick() {
 
 - 点击回车按钮,DevTools 工具会显示`typeof sum: "string" ` , 冒号右边的值是Watch表达式的结果。 
 
-  ![0_yEoCmNDJBEZb8Nxe](D:\note\js\assets/0_yEoCmNDJBEZb8Nxe.png)
+  ![0_yEoCmNDJBEZb8Nxe](assets/0_yEoCmNDJBEZb8Nxe.png)
 
   所以,`Sum`是一个字符串,它理应是一个`Number`,这就是这个DEMO的BUG的原因
 
