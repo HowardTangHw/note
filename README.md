@@ -21,6 +21,16 @@
 
 ### 目录
 
-[利用Chrome DevTools来修复Bug](./js/利用ChromeDevTools来修复bug.md)
+1. [利用Chrome DevTools来修复Bug](./js/利用ChromeDevTools来修复bug.md)
+2. [for和闭包-块级作用域和函数作用域](./js/for和闭包-块级作用域和函数作用域.md)
+3. [LeetCode刷题](./LeetCode/)
+4. [函数节流和函数去抖](./underscore/函数节流和函数去抖.js)
+5. [函数节流2](./underscore/函数节流2.js)
+6. [数组乱序](./underscore/数组乱序.js)
+7. [数组去重](./underscore/数组去重.js)
+8. [vue学习笔记](./vue/)
+9. [util](./util/)
+10. [webpack简单配置](./webpack/webpack配置.md)
+11. [LazyMan](./面试题/LazyMan/)
 
 TODO...
