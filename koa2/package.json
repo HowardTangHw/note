@@ -1,0 +1,9 @@
+{
+  "name": "koa2-tutorial",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "koa": "^2.5.1"
+  }
+}
