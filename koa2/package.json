@@ -5,5 +5,9 @@
   "license": "MIT",
   "devDependencies": {
     "koa": "^2.5.1"
+  },
+  "dependencies": {
+    "koa-bodyparser": "^4.2.0",
+    "koa-router": "^7.4.0"
   }
 }
