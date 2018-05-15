@@ -43,9 +43,27 @@ app.listen(3000, () => {
 
 
 
+可以利用npm scripts快速启动,在`package.json`中增加代码
+
+```js
+"scripts": {
+  "dev": "node app.js"
+}
+```
+
+那么就可以在命令行中运行
+
+```bash
+npm run dev
+```
+
+代替`node app.js`了
+
+
+
 ## 中间件
 
-[api](https://koajs.com/)
+[api](https://koajs.com/)         [zh-api](https://demopark.github.io/koa-docs-Zh-CN/)
 
 ### 中间件next的执行顺序
 
@@ -466,3 +484,469 @@ app.listen(3000, () => {
 ```
 
 > 用了bodyParser之后,就能从ctx.request.body中获取参数了
+
+
+
+
+
+## 重构
+
+将业务逻辑分层
+
+### 路由分层
+
+路由部分的代码可以分离成一个独立的文件，并根据个人喜好放置于项目根目录下，或独立放置于 `router` 文件夹中。在这里，我们将它命名为 `router.js`并将之放置于根目录下。
+
+
+
+#### 修改路由 router.js
+
+```js
+  const router = require('koa-router')()
+
+  module.exports = (app) => {
+    router.get('/', async(ctx, next) => {
+      ctx.response.body = `<h1>index page</h1>`
+    })
+    
+    router.get('/home', async(ctx, next) => {
+      console.log(ctx.request.query)
+      console.log(ctx.request.querystring)
+      ctx.response.body = '<h1>HOME page</h1>'
+    })
+    
+    router.get('/home/:id/:name', async(ctx, next)=>{
+      console.log(ctx.params)
+      ctx.response.body = '<h1>HOME page /:id/:name</h1>'
+    })
+    
+    router.get('/user', async(ctx, next)=>{
+      ctx.response.body = 
+      `
+        <form action="/user/register" method="post">
+          <input name="name" type="text" placeholder="请输入用户名：ikcamp"/> 
+          <br/>
+          <input name="password" type="text" placeholder="请输入密码：123456"/>
+          <br/> 
+          <button>GoGoGo</button>
+        </form>
+      `
+    })
+    
+    // 增加响应表单请求的路由
+    router.post('/user/register',async(ctx, next)=>{
+      let {name, password} = ctx.request.body
+      if( name == 'ikcamp' && password == '123456' ){
+        ctx.response.body = `Hello， ${name}！` 
+      }else{
+        ctx.response.body = '账号信息错误'
+      }
+    })
+    
+    app.use(router.routes())
+      .use(router.allowedMethods())
+  }
+```
+
+exports一个函数,将app作为参数传入进来
+
+#### 修改 app.js
+
+```js
+  const Koa = require('koa')
+  const bodyParser = require('koa-bodyparser')
+  const app = new Koa()
+  const router = require('./router')
+
+  app.use(bodyParser())
+
+  router(app)
+
+  app.listen(3000, () => {
+    console.log('server is running at http://localhost:3000')
+  })
+```
+
+将app作为参数 传入router当中
+
+
+
+### 分离controller层
+
+> 我们把路由对应的业务逻辑也分离出来。
+
+#### 新增 controller/home.js
+
+新建 `controller` 文件夹，增加一个 `home.js` 文件，并从 `router.js` 中提取出业务逻辑代码。
+
+```js
+  module.exports = {
+    index: async(ctx, next) => {
+      ctx.response.body = `<h1>index page</h1>`
+    },
+    home: async(ctx, next) => {
+      console.log(ctx.request.query)
+      console.log(ctx.request.querystring)
+      ctx.response.body = '<h1>HOME page</h1>'
+    },
+    homeParams: async(ctx, next) => {
+      console.log(ctx.params)
+      ctx.response.body = '<h1>HOME page /:id/:name</h1>'
+    },
+    login: async(ctx, next) => {
+      ctx.response.body =
+        `
+        <form action="/user/register" method="post">
+          <input name="name" type="text" placeholder="请输入用户名：ikcamp"/> 
+          <br/>
+          <input name="password" type="text" placeholder="请输入密码：123456"/>
+          <br/> 
+          <button>GoGoGo</button>
+        </form>
+      `
+    },
+    register: async(ctx, next) => {
+      let {
+        name,
+        password
+      } = ctx.request.body
+      if (name == 'ikcamp' && password == '123456') {
+        ctx.response.body = `Hello， ${name}！`
+      } else {
+        ctx.response.body = '账号信息错误'
+      }
+    }
+  }
+```
+
+
+
+#### 修改路由 router.js
+
+修改 `router.js` 文件，在里面引入 `controler/home`：
+
+```js
+  const router = require('koa-router')()
+  const HomeController = require('./controller/home')
+  module.exports = (app) => {
+    router.get( '/', HomeController.index )
+    
+    router.get('/home', HomeController.home)
+    
+    router.get('/home/:id/:name', HomeController.homeParams)
+    
+    router.get('/user', HomeController.login)
+    
+    router.post('/user/register', HomeController.register)
+    
+    app.use(router.routes())
+      .use(router.allowedMethods())
+  }
+```
+
+如此，将每个路由的处理逻辑分离到 `controller` 下的独立文件当中，便于后期维护。
+
+目前的代码结构已经比较清晰了，适用于以 `node` 作为中间层、中转层的项目。如果想要把 `node` 作为真正的后端去操作数据库等，**建议**再分出一层 `service`，用于处理数据层面的交互，比如调用 `model` 处理数据库，调用第三方接口等，而`controller` 里面只做一些简单的参数处理。
+
+
+
+### 分离service层
+
+#### 新建 service/home.js
+
+新建 `service` 文件夹，并于该文件夹下新增一个 `home.js` 文件，用于抽离 `controller/home.js` 中的部分代码：
+
+```js
+module.exports = {
+  register: async (name, pwd) => {
+    let data = '账号信息错误';
+    if (name == 'abc' && pwd == '123') {
+      data = `hellow,${name}`;
+    }
+    return data;
+  },
+};
+
+```
+
+
+
+#### 修改 controller/home.js
+
+```js
+// 引入 service 文件
+const HomeService = require('../service/home')
+module.exports = {
+  // ……省略上面代码
+  // 重写 register 方法 
+  register: async(ctx, next) => {
+    let {
+      name,
+      password
+    } = ctx.request.body
+    let data = await HomeService.register(name, password)
+    ctx.response.body = data
+  }
+}
+```
+
+
+
+## 模板引擎nunjucks
+
+### 安装
+
+```bash
+yarn add koa-nunjucks-2 
+```
+
+### 语法
+
+[api](http://mozilla.github.io/nunjucks/cn/templating.html)
+
+变量
+
+```js
+  {{ username }}
+
+  {{ foo.bar }}
+  {{ foo["bar"] }}
+```
+
+如果变量的值为 `undefined` 或 `null` ，将不予显示。
+
+过滤器
+
+```js
+  {{ foo | title }}
+  {{ foo | join(",") }}
+  {{ foo | replace("foo", "bar") | capitalize }}
+```
+
+`if` 判断
+
+```js
+  {% if variable %}
+    It is true
+  {% endif %}
+
+  {% if hungry %}
+    I am hungry
+  {% elif tired %}
+    I am tired
+  {% else %}
+    I am good!
+  {% endif %}
+```
+
+`for` 循环
+
+```js
+  var items = [{ title: "foo", id: 1 }, { title: "bar", id: 2}]
+```
+
+```js
+  <h1>Posts</h1>
+  <ul>
+  {% for item in items %}
+    <li>{{ item.title }}</li>
+  {% else %}
+    <li>This would display if the 'item' collection were empty</li>
+  {% endfor %}
+  </ul>
+```
+
+`macro` 宏
+
+宏：定义可复用的内容，类似于编程语言中的函数
+
+```js
+  {% macro field(name, value='', type='text') %}
+  <div class="field">
+    <input type="{{ type }}" name="{{ name }}"
+          value="{{ value | escape }}" />
+  </div>
+  {% endmacro %}
+```
+
+接下来就可以把 `field` 当作函数一样使用：
+
+```js
+  {{ field('user') }}
+  {{ field('pass', type='password') }}
+```
+
+
+
+### 继承功能
+
+网页常见的结构大多是头部、中间体加尾部，同一个网站下的多个网页，头部和尾部内容通常来说基本一致。于是我们可以采用**继承**功能来进行编写。
+
+先定义一个 `layout.html`
+
+```html
+  <html>
+    <head>
+      {% block head %}
+      <link rel="stylesheet">
+      {% endblock %}
+    </head>  
+    <body>
+      {% block header %}
+      <h1>this is header</h1>
+      {% endblock %}
+
+      {% block body %}
+      <h1>this is body</h1>
+      {% endblock %}
+
+      {% block footer %}
+      <h1>this is footer</h1>  
+      {% endblock %}
+
+      {% block content %}
+      <script>
+        //this is place for javascript
+      </script>
+      {% endblock %}
+    </body>
+  </html>
+```
+
+`layout` 定义了五个模块，分别命名为：`head`、`header`、`body`、`footer`、`content`。`header` 和 `footer` 是公用的，因此基本不动。业务代码的修改只需要在 `body` 内容体中进行、业务样式表和业务脚本分别在头部 `head` 和底部 `content` 中引入。
+
+接下来我们再定义一个业务级别的视图页面：`home.html`
+
+```html
+  {% extends 'layout.html' %}
+
+  {% block head %}
+  <link href="home.css">
+  {% endblock %}
+
+  {% block body %}
+  <h1>home 页面内容</h1>
+  {% endblock %}
+
+  {% block content %}
+  <script src="home.js"></script>
+  {% endblock%}
+```
+
+最终的 `home.html` 输出后如下所示：
+
+```html
+  <html>
+    <head>
+      <link href="home.css">
+    </head>  
+    <body>
+      <h1>this is header</h1>
+
+      <h1>home 页面内容</h1>
+
+      <h1>this is footer</h1>  
+
+      <script src="home.js"></script>
+    </body>
+  </html>
+```
+
+`extends`将模板继承,而`  {% block body %}{% endblock %}`则会替换掉模板里面相应的内容
+
+
+
+### 安全性
+
+请对特殊字符进行转义，防止 `Xss` 攻击。若在页面上写入 `Hello World<script>alert(0)</script>` 这类字符串变量，并且不进行转义，页面渲染时该脚本就会自动执行，弹出提示框。  
+
+所以我们使用的时候-->`在app.js中`
+
+```js
+app.use(
+  nunjucks({
+    ext: 'html',
+    path: path.join(__dirname, 'views'), // 指定视图目录
+    nunjucksConfig: {
+      trimBlocks: true, // 开启转义 防Xss
+    },
+  })
+);
+```
+
+
+
+### 使用
+
+修改 `app.js`，引入中间件，并指定存放视图文件的目录 `views`：
+
+```js
+  const Koa = require('koa')
+  const path = require('path')
+  const bodyParser = require('koa-bodyparser')
+  const nunjucks = require('koa-nunjucks-2')
+
+  const app = new Koa()
+  const router = require('./router')
+
+  app.use(nunjucks({
+    ext: 'html',
+    path: path.join(__dirname, 'views'),// 指定视图目录
+    nunjucksConfig: {
+      trimBlocks: true // 开启转义 防Xss
+    }
+  }));
+
+  app.use(bodyParser())
+  router(app)
+  app.listen(3000, () => {
+    console.log('server is running at http://localhost:3000')
+  })
+```
+
+在之前的项目中，视图被写在了 `controller/home` 里面，现在我们把它迁移到 `views` 中：
+
+新建 `views/home/login.html`:
+
+```html
+  <!DOCTYPE html>
+  <html lang="en">
+
+  <head>
+    <title></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+
+  <body>
+    <form action="/user/register" method="post">
+      <input name="name" type="text" placeholder="请输入用户名：abc" />
+      <br/>
+      <input name="password" type="text" placeholder="请输入密码：123" />
+      <br/>
+      <button>{{btnName}}</button>
+    </form>
+  </body>
+
+  </html>
+```
+
+重写 `controller/home` 中的 `login` 方法：
+
+```js
+  login: async(ctx, next) => {
+      
+    await ctx.render('home/login',{
+      // 这里可以传参了
+      btnName: '这里可以传参了'
+    })
+  },
+```
+
+##### render
+
+`nunjucks.render(name, [context], [callback])`
+
+渲染模式时需要两个参数，模板名 **name** 和数据 **context**。如果 **callback** 存在，当渲染完成后会被调用，第一个参数是错误，第二个为返回的结果；如果不存在，`render` 方法会直接返回结果，错误时会抛错。
+
+**注意：** 这里我们使用了 `await` 来异步读取文件。因为需要等待，所以必须保证读取文件之后再进行请求的响应。

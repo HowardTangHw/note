@@ -4,10 +4,14 @@
   "main": "index.js",
   "license": "MIT",
   "devDependencies": {
-    "koa": "^2.5.1"
+    "koa": "^2.5.1",
+    "koa-nunjucks-2": "^3.0.2"
   },
   "dependencies": {
     "koa-bodyparser": "^4.2.0",
     "koa-router": "^7.4.0"
+  },
+  "scripts": {
+    "dev": "node app.js"
   }
 }
