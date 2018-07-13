@@ -3,3 +3,4 @@ test.js
 .vscode
 node_modules
 vue-2.0-simple-routing-example
+.DS_Store
