@@ -52,6 +52,9 @@ class Game extends React.Component {
       stepNumber: 0,
       xIsNext: true,
     };
+    console.log(this);
+    this.btnClickWrapper = this.btnClick.bind(this);
+    this.handleClick = this.handleClick.bind(this, 'val');
   }
   jumpTo(step) {
     this.setState({
@@ -59,7 +62,10 @@ class Game extends React.Component {
       xIsNext: step % 2 ? false : true,
     });
   }
-  handleClick(i, ...args) {
+  handleClick(type, i, ...args) {
+    console.log('inner');
+    console.log(type);
+    console.log(i);
     console.log(args);
     const history = this.state.history.slice(0, this.state.stepNumber + 1);
     const current = history[history.length - 1];
@@ -78,6 +84,15 @@ class Game extends React.Component {
       xIsNext: !this.state.xIsNext,
     });
   }
+  btnClick(val) {
+    let _this = this;
+    return function() {
+      console.log(`btnClick`);
+      console.log(_this.state);
+      console.log(val);
+    };
+  }
+
   render() {
     const history = this.state.history;
     const current = history[this.state.stepNumber];
@@ -101,8 +116,9 @@ class Game extends React.Component {
     }
     return (
       <div className="game">
+        <h1 onClick={this.btnClick('123')}>Click me</h1>
         <div className="game-board">
-          <Board squares={current.squares} onClick={(i, ...args) => this.handleClick(i, args)} />
+          <Board squares={current.squares} onClick={this.handleClick} />
         </div>
         <div className="game-info">
           <div>{status}</div>
