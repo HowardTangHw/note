@@ -59,6 +59,7 @@ function demo(a, b, c) {
     const b_index = b.findIndex(v => v == a[i]);
     if (b_index !== -1) {
       if (!b_dist[b_index]) b_dist[b_index] = [];
+      // 利用排序数组的坐标索引来排, 最后再讲二维数组转一维
       b_dist[b_index].push(a[i]);
       continue;
     }
