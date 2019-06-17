@@ -4,7 +4,7 @@ import './App.css';
 import $ from 'jquery';
 function App() {
   $.ajax({
-    url: '10.0.0.168',
+    url: 'http://10.0.0.168/adsfasdf/dddddd',
     method: 'get',
   });
   return (
