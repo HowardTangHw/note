@@ -12,9 +12,16 @@ export function DemoHoc(leftComp: React.ReactNode, RightComp: React.ReactNode) {
   };
 }
 
-interface fcProps extends React.FC {
+interface fcProps {
   abcd?: string;
+  leftComp?: React.ReactNode;
+  rightComp?: React.ReactNode;
 }
-export const demoFunctionComp: fcProps = props => {
-  return <div>123 {props.children}</div>;
+export const demoFunctionComp: React.FC<fcProps> = props => {
+  return (
+    <div>
+      <div>{props.leftComp}</div>
+      <div>{props.children}</div>
+    </div>
+  );
 };
