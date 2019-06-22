@@ -1,5 +1,5 @@
 import * as React from 'react';
-export function demoHoc(leftComp: React.ReactNode, RightComp: React.ReactNode) {
+export function DemoHoc(leftComp: React.ReactNode, RightComp: React.ReactNode) {
   return class extends React.Component {
     public render() {
       return (
@@ -12,9 +12,9 @@ export function demoHoc(leftComp: React.ReactNode, RightComp: React.ReactNode) {
   };
 }
 
-interface ddd extends React.FC {
+interface fcProps extends React.FC {
   abcd?: string;
 }
-export const demoFunctionComp: ddd = props => {
+export const demoFunctionComp: fcProps = props => {
   return <div>123 {props.children}</div>;
 };

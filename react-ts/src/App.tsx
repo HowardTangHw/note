@@ -1,13 +1,14 @@
 import * as React from 'react';
 import './App.css';
-import { demoHoc } from './hoc';
+import { DemoHoc } from './hoc';
 
+let C = DemoHoc(<div>123</div>, <div>123</div>);
 class App extends React.Component {
   // private leftComp = () => {
   //   return <div>123</div>;
   // };
   public render() {
-    return <div className="App">{demoHoc(<div>123</div>, <div>123</div>)}</div>;
+    return <div>{<C />}</div>;
   }
 }
 
